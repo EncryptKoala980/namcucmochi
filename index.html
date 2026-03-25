@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="vi" class="h-full">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,9 @@
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
   <script>
     tailwind.config = {
       theme: {
@@ -18,68 +21,563 @@
             body: ['Be Vietnam Pro', 'sans-serif']
           },
           colors: {
-            forest: { 50:'#f0fdf4', 100:'#dcfce7', 200:'#bbf7d0', 500:'#22c55e', 600:'#16a34a', 700:'#15803d', 800:'#166534', 900:'#14532d' },
-            ocean: { 50:'#eff6ff', 100:'#dbeafe', 200:'#bfdbfe', 400:'#38bdf8', 500:'#0ea5e9', 600:'#0284c7', 700:'#0369a1', 800:'#075985', 900:'#0c4a6e' },
-            golden: { 50:'#fffbeb', 100:'#fef3c7', 200:'#fde68a', 300:'#fcd34d', 400:'#fbbf24', 500:'#f59e0b', 600:'#d97706', 700:'#b45309' }
+            forest: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' },
+            ocean: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e' },
+            golden: { 50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309' },
+            red: { 50: '#fef2f2', 100: '#fee2e2', 200: '#fecaca', 400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d' },
+            hill: { 50: '#fefce8', 100: '#fef9c3', 200: '#fef08a', 400: '#fde047', 500: '#facc15', 600: '#eab308', 700: '#ca8a04', 800: '#a16207', 900: '#854d0e' },
+            lightocean: { 50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 400: '#7dd3fc', 500: '#38bdf8', 600: '#0ea5e9', 700: '#0284c7', 800: '#0369a1', 900: '#075985' },
           }
         }
       }
     }
   </script>
   <style>
-    html { scroll-behavior: smooth; }
-    html, body { height: 100%; margin: 0; }
-    .fade-up { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
-    .fade-up.visible { opacity: 1; transform: translateY(0); }
-    .fade-left { opacity: 0; transform: translateX(-40px); transition: opacity 0.7s ease, transform 0.7s ease; }
-    .fade-left.visible { opacity: 1; transform: translateX(0); }
-    .fade-right { opacity: 0; transform: translateX(40px); transition: opacity 0.7s ease, transform 0.7s ease; }
-    .fade-right.visible { opacity: 1; transform: translateX(0); }
-    .zoom-in { opacity: 0; transform: scale(0.9); transition: opacity 0.7s ease, transform 0.7s ease; }
-    .zoom-in.visible { opacity: 1; transform: scale(1); }
+    .petal-menu-item {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 10;
+      opacity: 0;
+      /* Xuất phát từ tâm */
+      transform: translate(-50%, -50%) rotate(0deg) scale(0);
+      transition: all 0.6s cubic-bezier(0.4, 1.2, 0.3, 1.1);
+    }
+
+    /* Khi mở: Tất cả cánh hoa (cả chính và phụ) đồng loạt trồi ra */
+    #radial-menu.active .petal-menu-item {
+      opacity: 1;
+      transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(-1 * var(--dist))) scale(1);
+    }
+
+    /* Cánh hoa trang trí: Không nhận tương tác chuột */
+    .decor-only {
+      z-index: 5;
+      /* Nằm dưới cánh hoa chính một chút */
+      pointer-events: none !important;
+    }
+
+    .below {
+      z-index: 0;
+      pointer-events: none !important;
+    }
+
+    .petal-content {
+      position: relative;
+      width: 90px;
+      /* Có thể thu nhỏ cánh hoa phụ một chút nếu muốn */
+      height: 120px;
+    }
+
+    .petal-img {
+
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
+    }
+
+    .petal-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 99;
+      /* Giữ chữ nằm ngang */
+      transform: translate(-50%, -50%) rotate(calc(-1 * var(--angle)));
+      font-size: 11px;
+      font-weight: 900;
+      color: #fff;
+      text-transform: uppercase;
+      text-shadow: 0 0 5px #000;
+      white-space: nowrap;
+    }
+
+    /* Hiệu ứng Delay: Tạo cảm giác hoa nở xoay tròn nhẹ */
+    .petal-menu-item:nth-child(1) {
+      transition-delay: 0s;
+    }
+
+    .petal-menu-item:nth-child(2) {
+      transition-delay: 0.03s;
+    }
+
+    .petal-menu-item:nth-child(3) {
+      transition-delay: 0.06;
+    }
+
+    .petal-menu-item:nth-child(4) {
+      transition-delay: 0.09s;
+    }
+
+    .petal-menu-item:nth-child(5) {
+      transition-delay: 0.12;
+    }
+
+    .petal-menu-item:nth-child(6) {
+      transition-delay: 0.15s;
+    }
+
+    .petal-menu-item:nth-child(7) {
+      transition-delay: 0.18s;
+    }
+
+    .petal-menu-item:nth-child(8) {
+      transition-delay: 0.21s;
+    }
+
+    .petal-menu-item:nth-child(9) {
+      transition-delay: 0.24s;
+    }
+
+    .petal-menu-item:nth-child(10) {
+      transition-delay: 0.27s;
+    }
+
+    .petal-menu-item:nth-child(11) {
+      transition-delay: 0.30s;
+    }
+
+    .petal-menu-item:nth-child(12) {
+      transition-delay: 0.33s;
+    }
+
+    .petal-menu-item:nth-child(13) {
+      transition-delay: 0.36s;
+    }
+
+    .petal-menu-item:nth-child(14) {
+      transition-delay: 0.39s;
+    }
+
+    .petal-menu-item:nth-child(15) {
+      transition-delay: 0.42s;
+    }
+
+    .petal-menu-item:nth-child(16) {
+      transition-delay: 0.45s;
+    }
+
+    /* Khung chứa của mỗi mục menu */
+    .nav-item {
+      display: inline-block;
+      overflow: visible;
+      /* Cho phép cánh hoa trồi ra ngoài phạm vi chữ */
+      text-decoration: none;
+    }
+
+    /* Kiểu dáng cho chữ */
+    .nav-text {
+      font-weight: 600;
+      color: #fff;
+      transition: color 0.3s ease;
+    }
+
+    /* Hình ảnh PNG ẩn bên dưới */
+    .nav-petal-hover {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      /* Bắt đầu từ đáy của chữ */
+      width: 50px;
+      /* Chỉnh kích cỡ PNG tại đây */
+      height: auto;
+      transform: translateX(-50%) translateY(20px) scale(0.5);
+      /* Nằm thấp xuống và thu nhỏ */
+      opacity: 0;
+      z-index: 1;
+      /* Nằm dưới lớp chữ (z-index: 10) */
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+      /* Không làm vướng con trỏ chuột */
+    }
+
+    /* Hiệu ứng khi Dí Chuột (Hover) */
+    .nav-item:hover .nav-petal-hover {
+      opacity: 1;
+      /* Trồi lên trên và phóng to về kích thước chuẩn */
+      transform: translateX(-50%) translateY(-10px) scale(1.2);
+    }
+
+    /* Đổi màu chữ khi hover để nổi bật trên nền cánh hoa */
+    .nav-item:hover .nav-text {
+      color: #fbbf24;
+      /* Màu vàng hoặc màu tương phản với cánh hoa */
+    }
+
+
+
+    .hover-scale-text {
+      display: inline-block;
+      text-align: center;
+      /* Quan trọng: giữ nguyên kích thước chiếm chỗ */
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
+      transform-origin: center;
+      /* Phóng to từ tâm để không lệch vị trí */
+      width: 120px;
+      /* Đặt chiều rộng cố định để các chữ đứng yên một chỗ */
+    }
+
+    .hover-scale-text:hover {
+      /* Thay vì dùng font-size 55px, ta dùng scale */
+      /* Gốc là 23px, muốn lên 55px thì lấy 55/23 ≈ 2.4 */
+      transform: scale(2);
+      color: #fbbf24 !important;
+      /* Màu vàng golden-300 */
+      z-index: 50;
+      /* Đảm bảo khi to ra nó đè lên trên các thứ khác */
+      position: relative;
+    }
+
+    @font-face {
+      font-family: 'Halone-Regular';
+      src: url('font.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    .custom-font {
+      font-family: 'Halone-Regular', sans-serif;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .fade-left {
+      opacity: 0;
+      transform: translateX(-40px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .fade-left.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .fade-right {
+      opacity: 0;
+      transform: translateX(40px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .fade-right.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .zoom-in {
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .zoom-in.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
     .hero-bg {
       background: linear-gradient(135deg, #14532d 0%, #0c4a6e 40%, #075985 70%, #166534 100%);
-      position: relative; overflow: hidden;
+      position: relative;
+      overflow: hidden;
     }
+
     .hero-bg::before {
-      content: ''; position: absolute; inset: 0;
-      background: radial-gradient(ellipse 80% 50% at 20% 80%, rgba(251,191,36,0.15) 0%, transparent 60%),
-                  radial-gradient(ellipse 60% 40% at 80% 20%, rgba(14,165,233,0.2) 0%, transparent 50%);
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 20% 80%, rgba(251, 191, 36, 0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 20%, rgba(14, 165, 233, 0.2) 0%, transparent 50%);
     }
-    .card-destination { transition: transform 0.4s ease, box-shadow 0.4s ease; }
-    .card-destination:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-    .food-card { transition: transform 0.4s ease; }
-    .food-card:hover { transform: scale(1.05); }
-    .gallery-item { transition: transform 0.5s ease, filter 0.5s ease; filter: brightness(0.8); }
-    .gallery-item:hover { transform: scale(1.05); filter: brightness(1); }
+
+    .card-destination {
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .card-destination:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .food-card {
+      transition: transform 0.4s ease;
+    }
+
+    .food-card:hover {
+      transform: scale(1.05);
+    }
+
+    .gallery-item {
+      transition: transform 0.5s ease, filter 0.5s ease;
+      filter: brightness(0.8);
+    }
+
+    .gallery-item:hover {
+      transform: scale(1.05);
+      filter: brightness(1);
+    }
+
     .shimmer-text {
       background: linear-gradient(90deg, #fcd34d 0%, #ffffff 25%, #fcd34d 50%, #ffffff 75%, #fcd34d 100%);
-      background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
       animation: shimmer 4s linear infinite;
     }
-    @keyframes shimmer { 0%{ background-position: -200% center; } 100%{ background-position: 200% center; } }
-    .nav-glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-    .section-divider { height: 4px; background: linear-gradient(90deg, #16a34a, #0ea5e9, #f59e0b, #0ea5e9, #16a34a); background-size: 200% auto; animation: shimmer 6s linear infinite; }
-    .stagger-1 { transition-delay: 0.1s; } .stagger-2 { transition-delay: 0.2s; } .stagger-3 { transition-delay: 0.3s; }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% center;
+      }
+
+      100% {
+        background-position: 200% center;
+      }
+    }
+
+    .nav-glass {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .section-divider {
+      height: 4px;
+      background: linear-gradient(90deg, #16a34a, #0ea5e9, #f59e0b, #0ea5e9, #16a34a);
+      background-size: 200% auto;
+      animation: shimmer 6s linear infinite;
+    }
+
+    .stagger-1 {
+      transition-delay: 0.1s;
+    }
+
+    .stagger-2 {
+      transition-delay: 0.2s;
+    }
+
+    .stagger-3 {
+      transition-delay: 0.3s;
+    }
+
+    /* Container chính cho mỗi mục */
+    /* Container của mỗi mục menu */
+    /* Container của từng mục */
+    .nav-pc-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: visible;
+      /* Để cánh hoa trồi cao hơn vùng chữ */
+      padding: 10px 0;
+    }
+
+    /* Lớp chữ - Ép luôn nằm trên cùng */
+    .nav-pc-text {
+      position: relative;
+      z-index: 20;
+      /* Luôn cao hơn ảnh */
+      transition: all 0.3s ease;
+    }
+
+    /* Hình ảnh PNG - Mặc định ẩn và nằm dưới chân */
+    .nav-pc-petal {
+      position: absolute;
+      left: 50%;
+      bottom: -100px;
+      /* Gốc ở đáy chữ */
+      width: 153.6px;
+      /* Chiều rộng cánh hoa */
+      height: 102.4px;
+      /* Chiều cao kéo giãn */
+      object-fit: contain;
+      z-index: 10;
+      /* Nằm DƯỚI chữ */
+
+      /* Trạng thái ẩn hoàn toàn */
+      opacity: 0;
+      pointer-events: none;
+      /* Không cản trở click vào chữ */
+
+      /* Đặt ở vị trí thấp và thu nhỏ */
+      transform: translateX(-50%) translateY(30px) scale(0.5);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* --- HIỆU ỨNG KHI DÍ CHUỘT (HOVER) --- */
+
+    .nav-pc-group:hover .nav-pc-petal {
+      /* Hiện hình */
+      opacity: 1;
+      /* Trồi lên vị trí mong muốn (translateY âm) và phóng to */
+      transform: translateX(-50%) translateY(-35px) scale(1.3) rotate(-5deg);
+    }
+
+    .nav-pc-group:hover .nav-pc-text {
+      /* Khi hover, chữ có thể đổi màu hoặc nhích nhẹ lên để tạo độ sâu */
+      color: #fbbf24;
+      /* Màu golden-300 */
+      transform: translateY(-2px);
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
   </style>
 </head>
+
 <body class="h-full bg-slate-950 text-white font-body">
   <div id="app-wrapper" class="w-full h-full overflow-auto">
     <!-- Navigation -->
     <nav id="main-nav" class="nav-glass fixed top-0 left-0 right-0 z-50 bg-slate-950/60">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16 sm:h-20">
-          <a href="#hero" class="flex items-center gap-2 group">
-            <span class="text-2xl">🇻🇳</span>
-            <span class="font-display font-bold text-lg sm:text-xl text-golden-300 group-hover:text-golden-400">Vòng Quanh VN</span>
+          <a href="#hero" class="flex items-start gap-2 group shrink-0 relative pt-0">
+            <!-- Khung bao bọc biểu tượng -->
+            <!-- md:w-[150px]: Kích thước trên máy tính | w-[80px]: Kích thước trên di động -->
+            <div class="vn-map-container shrink-0" style="position: absolute; 
+              left: 0px;    /* Đẩy sang trái để không đè chữ */
+              top: 0px;     /* Chỉnh lên xuống để đỉnh ảnh bằng đỉnh chữ */
+              opacity: 0.5; 
+              pointer-events: none; 
+              z-index: 0;
+              display: flex;
+              align-items: flex-start;
+              justify-content: center;">
+              <img src="map.png" alt="VN Map" class="vn-map-png" style="width: 150px;     /* Cố định chiều rộng để không mất góc */
+             height: auto;      /* Tự động tính chiều cao theo tỉ lệ */
+             max-width: none;   /* Ngăn Tailwind bóp ảnh */
+             display: block;
+             object-fit: contain;
+             filter: drop-shadow(0 0 5px rgba(220, 38, 38, 0.3));">
+            </div>
+
+            <!-- Chữ tiêu đề -->
+            <span
+              class="custom-font font-bold text-lg sm:text-xl text-golden-300 group-hover:text-golden-400 whitespace-nowrap"
+              style="line-height: 1; position: relative; z-index: 10; margin-top: 2px;">
+              Việt Nam
+            </span>
           </a>
-          <div class="hidden md:flex items-center gap-8 text-sm font-medium">
-            <a href="#mien-bac" class="text-white/70 hover:text-golden-300 transition-colors">Miền Bắc</a>
-            <a href="#mien-trung" class="text-white/70 hover:text-golden-300 transition-colors">Miền Trung</a>
-            <a href="#mien-nam" class="text-white/70 hover:text-golden-300 transition-colors">Miền Nam</a>
-            <a href="#am-thuc" class="text-white/70 hover:text-golden-300 transition-colors">Ẩm Thực</a>
+          <div class="hidden md:flex items-center gap-12 text-sm font-medium">
+
+            <!-- Mục: Bắc -->
+            <a href="#mien-bac" class="nav-pc-group relative transition-colors custom-font" style="font-size: 23px">
+              <span class="nav-pc-text text-white/70 group-hover:text-golden-300">Bắc</span>
+              <img src="thung.png" class="nav-pc-petal" alt="">
+            </a>
+
+            <!-- Mục: Trung -->
+            <a href="#mien-trung" class="nav-pc-group relative transition-colors custom-font" style="font-size: 23px">
+              <span class="nav-pc-text text-white/70 group-hover:text-golden-300">Trung</span>
+              <img src="thung.png" class="nav-pc-petal" alt="">
+            </a>
+
+            <!-- Mục: Nam -->
+            <a href="#mien-nam" class="nav-pc-group relative transition-colors custom-font" style="font-size: 23px">
+              <span class="nav-pc-text text-white/70 group-hover:text-golden-300">Nam</span>
+              <img src="thung.png" class="nav-pc-petal" alt="">
+            </a>
+
+            <!-- Mục: Ẩm Thực -->
+            <a href="#am-thuc" class="nav-pc-group relative transition-colors custom-font" style="font-size: 23px">
+              <span class="nav-pc-text text-white/70 group-hover:text-golden-300">Ẩm Thực</span>
+              <img src="thung.png" class="nav-pc-petal" alt="">
+            </a>
+
           </div>
-          <button id="mobile-toggle" class="md:hidden text-white/80 p-2"><i data-lucide="menu" class="w-6 h-6"></i></button>
+          <!-- Mobile Radial Menu - Góc trên bên phải -->
+          <div id="radial-menu" class="md:hidden fixed top-24 right-8 z-[100] w-16 h-16">
+            <div class="relative w-full h-full">
+
+              <!-- CÁC MỤC MENU CHÍNH (Có chữ & Link) -->
+              <a href="#mien-bac" class="petal-menu-item" style="--angle: 0deg; --dist: 58px;">
+                <div class="petal-content">
+                  <img src="petal.png" class="petal-img">
+                  <span class="petal-label">Bắc</span>
+                </div>
+              </a>
+
+              <a href="#mien-trung" class="petal-menu-item" style="--angle: -45deg; --dist: 58px;">
+                <div class="petal-content">
+                  <img src="petal.png" class="petal-img">
+                  <span class="petal-label">Trung</span>
+                </div>
+              </a>
+
+              <a href="#mien-nam" class="petal-menu-item" style="--angle: -90deg; --dist: 58px;">
+                <div class="petal-content">
+                  <img src="petal.png" class="petal-img">
+                  <span class="petal-label">Nam</span>
+                </div>
+              </a>
+
+              <a href="#am-thuc" class="petal-menu-item" style="--angle: -135deg; --dist: 58px;">
+                <div class="petal-content">
+                  <img src="petal.png" class="petal-img">
+                  <span class="petal-label">Ẩm Thực</span>
+                </div>
+              </a>
+
+              <!-- CÁC CÁNH HOA TRANG TRÍ (Chỉ có hình, không có chữ/nút) -->
+              <div class="petal-menu-item decor-only" style="--angle: 45deg; --dist: 58px;">
+                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+              </div>
+              <div class="petal-menu-item decor-only" style="--angle: 90deg; --dist: 58px;">
+                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+              </div>
+              <div class="petal-menu-item decor-only" style="--angle: 135deg; --dist: 58px;">
+                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+              </div>
+              <div class="petal-menu-item decor-only" style="--angle: 180deg; --dist: 58px;">
+                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+              </div>
+              <div class="petal-menu-item below" style="--angle: -30deg; --dist: 58px;">
+                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+              </div>
+              <div class="petal-menu-item below" style="--angle: -60deg;--dist: 58px; ">
+                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+              </div>
+              <div class="petal-menu-item below" style="--angle: -120deg;--dist: 58px; ">
+                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+              </div>
+              <div class="petal-menu-item below" style="--angle: -150deg;--dist: 58px; ">
+                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+              </div>
+              <div class="petal-menu-item below" style="--angle: -210deg;--dist: 58px; ">
+                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+              </div>
+              <div class="petal-menu-item below" style="--angle: -240deg;--dist: 58px; ">
+                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+              </div>
+              <div class="petal-menu-item below" style="--angle: -300deg;--dist: 58px; ">
+                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+              </div>
+              <div class="petal-menu-item below" style="--angle: -330deg;--dist: 58px; ">
+                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+              </div>
+              <!-- Nút Lá Sen Trung Tâm -->
+              <button id="radial-toggle"
+                class="absolute inset-0 bg-forest-500 rounded-full z-50 shadow-lg flex items-center justify-center border-2 border-white/30 active:scale-90 transition-transform">
+                <i data-lucide="menu" class="w-8 h-8 text-white"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </nav>
@@ -87,16 +585,22 @@
     <!-- Hero Section -->
     <section id="hero" class="hero-bg relative flex items-center justify-center text-center py-32 min-h-screen">
       <div class="relative z-10 px-6 max-w-5xl mx-auto">
-        <div class="inline-flex items-center gap-2 bg-white/10 rounded-full px-5 py-2 mb-8 backdrop-blur-sm border border-white/10">
-          <span class="text-golden-400 text-sm font-medium tracking-wider uppercase">✦ Hành trình khám phá Việt Nam ✦</span>
+        <div
+          class="inline-flex items-center gap-2 bg-white/10 rounded-full px-5 py-2 mb-8 backdrop-blur-sm border border-white/10">
+          <span class="text-golden-400 text-sm font-medium tracking-wider uppercase">✦ Hành trình khám phá Việt Nam
+            ✦</span>
         </div>
-        <h1 id="hero-title" class="font-display font-800 text-5xl md:text-7xl leading-tight mb-4 shimmer-text">Vòng quanh Việt Nam</h1>
-        <p id="hero-subtitle" class="font-display text-xl md:text-3xl text-ocean-200 font-light mb-10">Khám phá vẻ đẹp từ Bắc vào Nam</p>
+        <h1 id="hero-title" class="custom-font" style="font-size : 100px">Vòng
+          quanh Việt Nam</h1>
+        <p id="hero-subtitle" class="font-display text-xl md:text-3xl text-ocean-200 font-light mb-10">Khám phá vẻ đẹp
+          từ Bắc vào Nam</p>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href="#mien-bac" class="bg-golden-500 text-slate-900 font-bold px-8 py-4 rounded-full text-lg hover:bg-golden-400 transition-all inline-flex items-center gap-2 shadow-lg shadow-golden-500/20">
+          <a href="#mien-bac"
+            class="bg-golden-500 text-slate-900 font-bold px-8 py-4 rounded-full text-lg hover:bg-golden-400 transition-all inline-flex items-center gap-2 shadow-lg shadow-golden-500/20">
             <i data-lucide="compass" class="w-5 h-5"></i> Bắt đầu hành trình
           </a>
-          <a href="#gallery" class="border-2 border-white/30 text-white font-medium px-8 py-4 rounded-full text-lg hover:bg-white/10 transition-all inline-flex items-center gap-2">
+          <a href="#gallery"
+            class="border-2 border-white/30 text-white font-medium px-8 py-4 rounded-full text-lg hover:bg-white/10 transition-all inline-flex items-center gap-2">
             <i data-lucide="camera" class="w-5 h-5"></i> Bộ sưu tập
           </a>
         </div>
@@ -109,16 +613,23 @@
     <section id="mien-bac" class="py-24 bg-slate-950">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16 fade-up">
-          <span class="inline-block bg-forest-800/60 text-forest-200 text-sm font-semibold px-4 py-1.5 rounded-full mb-4 uppercase">🏔️ Miền Bắc</span>
+          <span
+            class="inline-block bg-forest-800/60 text-forest-200 text-sm font-semibold px-4 py-1.5 rounded-full mb-4 uppercase">
+            Miền Bắc</span>
           <h2 class="font-display font-bold text-4xl md:text-5xl text-white mb-4">Vùng đất ngàn năm văn hiến</h2>
-          <p class="text-white/60 max-w-2xl mx-auto">Từ núi rừng Tây Bắc hùng vĩ đến vịnh biển kỳ vĩ bậc nhất thế giới.</p>
+          <p class="text-white/60 max-w-2xl mx-auto">Từ núi rừng Tây Bắc hùng vĩ đến vịnh biển kỳ vĩ bậc nhất thế giới.
+          </p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <!-- Hà Nội -->
-          <div class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 fade-up stagger-1">
+          <div
+            class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 fade-up stagger-1">
             <div class="relative h-60">
-              <img src="https://images.unsplash.com/photo-1509030450996-939974e167c8?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover" alt="Hà Nội">
-              <div class="absolute top-4 right-4 bg-golden-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full">Thủ đô</div>
+              <img
+                src="https://cdn3.ivivu.com/2022/09/36-ph%E1%BB%91-ph%C6%B0%E1%BB%9Dng.jpg?auto=format&fit=crop&q=80&w=800"
+                class="w-full h-full object-cover" alt="Hà Nội">
+              <div class="absolute top-4 right-4 bg-golden-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full">
+                Thủ đô</div>
             </div>
             <div class="p-6">
               <h3 class="font-display font-bold text-xl text-golden-300 mb-2">Hà Nội</h3>
@@ -126,10 +637,13 @@
             </div>
           </div>
           <!-- Sa Pa -->
-          <div class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 fade-up stagger-2">
+          <div
+            class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 fade-up stagger-2">
             <div class="relative h-60">
-              <img src="https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover" alt="Sa Pa">
-              <div class="absolute top-4 right-4 bg-forest-600 text-white text-xs font-bold px-3 py-1 rounded-full">Tây Bắc</div>
+              <img src="https://storage.googleapis.com/blogvxr-uploads/2019/02/sapa.jpg?auto=format&fit=crop&q=80&w=800"
+                class="w-full h-full object-cover" alt="Sa Pa">
+              <div class="absolute top-4 right-4 bg-forest-600 text-white text-xs font-bold px-3 py-1 rounded-full">Tây
+                Bắc</div>
             </div>
             <div class="p-6">
               <h3 class="font-display font-bold text-xl text-golden-300 mb-2">Sa Pa</h3>
@@ -137,10 +651,13 @@
             </div>
           </div>
           <!-- Hạ Long -->
-          <div class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 fade-up stagger-3">
+          <div
+            class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 fade-up stagger-3">
             <div class="relative h-60">
-              <img src="https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover" alt="Hạ Long">
-              <div class="absolute top-4 right-4 bg-ocean-600 text-white text-xs font-bold px-3 py-1 rounded-full">UNESCO</div>
+              <img src="https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&q=80&w=800"
+                class="w-full h-full object-cover" alt="Hạ Long">
+              <div class="absolute top-4 right-4 bg-ocean-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                UNESCO</div>
             </div>
             <div class="p-6">
               <h3 class="font-display font-bold text-xl text-golden-300 mb-2">Vịnh Hạ Long</h3>
@@ -156,12 +673,17 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
           <div class="rounded-3xl overflow-hidden h-96 shadow-2xl fade-left">
-            <img src="https://images.unsplash.com/photo-1599708153386-62bf3f033068?auto=format&fit=crop&q=80&w=1200" class="w-full h-full object-cover" alt="Huế">
+            <img
+              src="https://www.kkday.com/vi/blog/wp-content/uploads/6f6a69d3f924397a6035.jpg?auto=format&fit=crop&q=80&w=1200"
+              class="w-full h-full object-cover" alt="Huế">
           </div>
           <div class="fade-right">
-            <span class="inline-block bg-ocean-800 text-ocean-200 text-sm font-semibold px-4 py-1 rounded-full mb-4 uppercase">👑 Miền Trung</span>
+            <span
+              class="inline-block bg-ocean-800 text-ocean-200 text-sm font-semibold px-4 py-1 rounded-full mb-4 uppercase">
+              Miền Trung</span>
             <h2 class="font-display font-bold text-4xl text-white mb-6">Huế – Cố đô trầm mặc</h2>
-            <p class="text-white/70 text-lg mb-8 leading-relaxed">Nơi lưu giữ vẻ đẹp trang nghiêm của triều Nguyễn với Kinh thành cổ kính, sông Hương thơ mộng và ẩm thực cung đình tinh tế.</p>
+            <p class="text-white/70 text-lg mb-8 leading-relaxed">Nơi lưu giữ vẻ đẹp trang nghiêm của triều Nguyễn với
+              Kinh thành cổ kính, sông Hương thơ mộng và ẩm thực cung đình tinh tế.</p>
             <div class="flex gap-3">
               <span class="border border-white/10 bg-white/5 px-4 py-2 rounded-full text-sm">#KinhThanh</span>
               <span class="border border-white/10 bg-white/5 px-4 py-2 rounded-full text-sm">#AmThuc</span>
@@ -170,71 +692,126 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <!-- Hội An -->
-          <div class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 zoom-in">
-            <div class="relative h-64">
-              <img src="https://images.unsplash.com/photo-1555944804-84585057a8ac?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover" alt="Hội An">
-              <div class="absolute bottom-4 left-4"><h4 class="font-display font-bold text-2xl text-white drop-shadow-lg">Hội An</h4></div>
+          <div
+            class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 fade-up stagger-2">
+            <div class="relative h-60">
+              <img
+                src="https://bcp.cdnchinhphu.vn/334894974524682240/2025/9/18/cdhoian5-17581621538711341831070.jpeg?auto=format&fit=crop&q=80&w=800"
+                class="w-full h-full object-cover" alt="Hội An">
+              <div class="absolute top-4 right-4 bg-forest-600 text-white text-xs font-bold px-3 py-1 rounded-full">Phố
+                Cổ</div>
+            </div>
+            <div class="p-6">
+              <h3 class="font-display font-bold text-xl text-golden-300 mb-2">Hội An</h3>
+              <p class="text-white/60 text-sm">Phố cổ Hội An lung linh đèn lồng, những con đường rợp bóng cây, kiến trúc
+                cổ kính pha trộn Việt - Hoa - Nhật - Pháp.</p>
+              <div class="mt-4 flex flex-wrap gap-2"><span
+                  class="bg-red-700/50 text-red-200 text-xs px-3 py-1 rounded-full" style="border-top: 1.5px solid #fbbf24; 
+      border-bottom: 1.5px solid #fbbf24;background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%25\' height=\'100%25\' preserveAspectRatio=\'none\'><line x1=\'30%25\' y1=\'0\' x2=\'30%25\' y2=\'100%25\' stroke=\'rgba(254,226,226,0.15)\' stroke-width=\'0.5\'/><line x1=\'50%25\' y1=\'0\' x2=\'50%25\' y2=\'100%25\' stroke=\'rgba(254,226,226,0.15)\' stroke-width=\'0.5\'/><line x1=\'70%25\' y1=\'0\' x2=\'70%25\' y2=\'100%25\' stroke=\'rgba(254,226,226,0.15)\' stroke-width=\'0.5\'/></svg>');
+      background-size: 100% 100%;">Đèn lồng</span> <span
+                  class="bg-forest-700/50 text-forest-200 text-xs px-3 py-1 rounded-full">Chùa Cầu</span></div>
             </div>
           </div>
           <!-- Đà Nẵng -->
-          <div class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 zoom-in">
-            <div class="relative h-64">
-              <img src="https://images.unsplash.com/photo-1559592442-7e182c943449?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover" alt="Đà Nẵng">
-              <div class="absolute bottom-4 left-4"><h4 class="font-display font-bold text-2xl text-white drop-shadow-lg">Đà Nẵng</h4></div>
+          <div
+            class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 fade-up stagger-2">
+            <div class="relative h-60">
+              <img
+                src="https://benduthuyendanang.com/wp-content/uploads/Tour-xem-cau-rong-phun-lua-768x488.jpg?auto=format&fit=crop&q=80&w=800"
+                class="w-full h-full object-cover" alt="Đà Nẵng">
+              <div class="absolute top-4 right-4 bg-lightocean-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                Thành Phố Biển</div>
+            </div>
+            <div class="p-6">
+              <h3 class="font-display font-bold text-xl text-golden-300 mb-2">Đà Nẵng</h3>
+              <p class="text-white/60 text-sm">Thành phố đáng sống nhất Việt Nam với Cầu Vàng nổi tiếng, bãi biển Mỹ Khê
+                tuyệt đẹp, và Bà Nà Hills huyền ảo.</p>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <span class="bg-golden-700/50 text-golden-200 text-xs px-3 py-1 rounded-full">Cầu Vàng</span> 
+                <span class="bg-hill-700/50 text-hill-200 text-xs px-3 py-1 rounded-full">Bà Nà Hills</span> 
+                <span class="bg-lightocean-700/50 text-lightocean-200 text-xs px-3 py-1 rounded-full">Mỹ Khê</span></div>
             </div>
           </div>
         </div>
-      </div>
     </section>
 
     <!-- Miền Nam -->
     <section id="mien-nam" class="py-24 bg-slate-950">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16 fade-up">
-          <span class="inline-block bg-golden-700/60 text-golden-100 text-sm font-semibold px-4 py-1.5 rounded-full mb-4 uppercase">☀️ Miền Nam</span>
-          <h2 class="font-display font-bold text-4xl md:text-5xl text-white mb-4">Sôi động & Nhiệt huyết</h2>
+          <span
+            class="inline-block bg-golden-700/60 text-golden-100 text-sm font-semibold px-4 py-1.5 rounded-full mb-4 uppercase">
+            Miền Nam</span>
+          <h2 class="font-display font-bold text-4xl md:text-5xl text-white mb-4">Sôi động - Nhiệt huyết</h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div class="card-destination rounded-2xl overflow-hidden fade-up stagger-1">
-            <img src="https://images.unsplash.com/photo-1506012733827-e9214407f353?auto=format&fit=crop&q=80&w=800" class="h-80 w-full object-cover" alt="Sài Gòn">
-            <div class="p-4 text-center"><h3 class="font-bold">TP. Hồ Chí Minh</h3></div>
-          </div>
-          <div class="card-destination rounded-2xl overflow-hidden fade-up stagger-2">
-            <img src="https://images.unsplash.com/photo-1589782182703-2aad69b82142?auto=format&fit=crop&q=80&w=800" class="h-80 w-full object-cover" alt="Phú Quốc">
-            <div class="p-4 text-center"><h3 class="font-bold">Phú Quốc</h3></div>
-          </div>
-          <div class="card-destination rounded-2xl overflow-hidden fade-up stagger-3">
-            <img src="https://images.unsplash.com/photo-1599407954153-6110f0896740?auto=format&fit=crop&q=80&w=800" class="h-80 w-full object-cover" alt="Cần Thơ">
-            <div class="p-4 text-center"><h3 class="font-bold">Cần Thơ</h3></div>
+            <img
+              src="https://bcp.cdnchinhphu.vn/334894974524682240/2025/6/30/tphcm-1-1751245519173693919081.jpg?auto=format&fit=crop&q=80&w=800"
+              class="h-80 w-full object-cover" alt="Sài Gòn">
+            <div class="p-4 text-center">
+              <h3 class="font-bold">TP. Hồ Chí Minh</h3>
+              <h5>đô thị sôi động bậc nhất Việt Nam, nổi bật với Landmark 81 và nhịp sống hiện đại, phát triển không
+                ngừng.</h5>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <span class="bg-golden-700/50 text-golden-200 text-xs px-3 py-1 rounded-full">LandMark 81</span>
+                <span class="bg-red-700/50 text-red-200 text-xs px-3 py-1 rounded-full">Chợ Bến Thành</span>
+              </div>
+                </div>
+            </div>
+            <div class="card-destination rounded-2xl overflow-hidden fade-up stagger-2">
+              <img src="https://www.kkday.com/vi/blog/wp-content/uploads/hon-mong-tay-phu-quoc-19_1625565144.jpg?auto=format&fit=crop&q=80&w=800"
+                class="h-80 w-full object-cover" alt="Phú Quốc">
+              <div class="p-4 text-center">
+                <h3 class="font-bold">Phú Quốc</h3>
+                <h5 >Đảo ngọc thiên đường với hoàng hôn tuyệt đẹp, nước biển trong xanh, resort sang trọng, và hải sản tươi ngon bậc nhất.</h5>
+              </div>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <span class="bg-red-700/50 text-red-200 text-xs px-3 py-1 rounded-full">Hoàng Hôn</span>
+                <span class="bg-ocean-700/50 text-ocean-200 text-xs px-3 py-1 rounded-full">Lặn Biển</span></div>
+            </div>
+            <div class="card-destination rounded-2xl overflow-hidden fade-up stagger-3">
+              <img src="https://datviettour.com.vn/uploads/images/mientay/cantho/danh-thang/du-lich-cho-noi-cai-rang-mien-tay.jpg?auto=format&fit=crop&q=80&w=800"
+                class="h-80 w-full object-cover" alt="Cần Thơ">
+              <div class="p-4 text-center">
+                <h3 class="font-bold">Cần Thơ</h3>
+                <h5>Thủ phủ miền Tây sông nước với chợ nổi Cái Răng rộn ràng, vườn trái cây sum suê, và nhịp sống bình dị ven sông.</h5>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <span class="bg-lightocean-700/50 text-lightocean-200 text-xs px-3 py-1 rounded-full">Chợ Nổi</span>
+                  <span class="bg-forest-700/50 text-forest-200 text-xs px-3 py-1 rounded-full">Vườn Trái Cây</span></div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
     </section>
 
     <!-- Ẩm thực -->
     <section id="am-thuc" class="py-24 bg-slate-900">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16 fade-up">
-          <h2 class="font-display font-bold text-4xl text-white mb-4">Hương vị Việt Nam</h2>
+          <h2 class="custom-font font-bold text-4xl text-white mb-4">Hương vị Việt Nam</h2>
           <p class="text-white/60">Hành trình khám phá ẩm thực độc đáo qua từng vùng miền.</p>
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
           <div class="food-card bg-slate-800 rounded-2xl overflow-hidden border border-white/5 fade-up stagger-1">
-            <img src="https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?auto=format&fit=crop&q=80&w=600" class="h-48 w-full object-cover" alt="Phở">
+            <img src="https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?auto=format&fit=crop&q=80&w=600"
+              class="h-48 w-full object-cover" alt="Phở">
             <div class="p-4 text-center font-bold text-golden-300">Phở Hà Nội</div>
           </div>
           <div class="food-card bg-slate-800 rounded-2xl overflow-hidden border border-white/5 fade-up stagger-2">
-            <img src="https://images.unsplash.com/photo-1509356843151-3e7d96241e11?auto=format&fit=crop&q=80&w=600" class="h-48 w-full object-cover" alt="Bánh mì">
+            <img src="https://cafefcdn.com/203337114487263232/2023/9/12/banhmi-16945047945811495140150-1694522697193-16945226975611698241211.png?auto=format&fit=crop&q=80&w=600"
+              class="h-48 w-full object-cover" alt="Bánh mì">
             <div class="p-4 text-center font-bold text-golden-300">Bánh Mì</div>
           </div>
           <div class="food-card bg-slate-800 rounded-2xl overflow-hidden border border-white/5 fade-up stagger-3">
-            <img src="https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&q=80&w=600" class="h-48 w-full object-cover" alt="Bún bò">
+            <img src="https://cdn11.dienmaycholon.vn/filewebdmclnew/public/userupload/files/kien-thuc/cach-nau-bun-bo-hue-bang-goi-gia-vi/cach-nau-bun-bo-hue-bang-goi-gia-vi-1.jpg?auto=format&fit=crop&q=80&w=600"
+              class="h-48 w-full object-cover" alt="Bún bò">
             <div class="p-4 text-center font-bold text-golden-300">Bún Bò Huế</div>
           </div>
           <div class="food-card bg-slate-800 rounded-2xl overflow-hidden border border-white/5 fade-up stagger-4">
-            <img src="https://images.unsplash.com/photo-1534080564607-bc404a291498?auto=format&fit=crop&q=80&w=600" class="h-48 w-full object-cover" alt="Gỏi cuốn">
+            <img src="https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/2023_10_23_638336957766719361_cach-lam-goi-cuon.jpg?auto=format&fit=crop&q=80&w=600"
+              class="h-48 w-full object-cover" alt="Gỏi cuốn">
             <div class="p-4 text-center font-bold text-golden-300">Gỏi Cuốn</div>
-          </div>
         </div>
       </div>
     </section>
@@ -243,32 +820,40 @@
     <section id="gallery" class="py-24 bg-slate-950">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16 fade-up">
-          <h2 class="font-display font-bold text-4xl text-white mb-4">Khoảnh khắc Việt Nam</h2>
+          <h2 class="custom-font font-bold text-4xl text-white mb-4">Khoảnh khắc Việt Nam</h2>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-1">
-            <img src="https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+            <img src="https://media.baoquangninh.vn/upload/image/202302/medium/2054615_9d9f316554c0deb966c85d637a0761ca.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-2">
-            <img src="https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+            <img src="https://cdn.xanhsm.com/2025/02/50971365-le-hoi-den-long-2.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-3">
-            <img src="https://images.unsplash.com/photo-1555944804-84585057a8ac?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+            <img src="https://ktmt.vnmediacdn.com/images/2021/09/03/7-1630640575-khau-pha.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-4">
-            <img src="https://images.unsplash.com/photo-1559592442-7e182c943449?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+            <img src="https://gocheap.vn/storage/temp/public/c25/280/a52/ha-noi-sang-som-2__800.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-1">
-            <img src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+            <img src="https://cdn2.tuoitre.vn/471584752817336320/2024/5/26/hue-mua-17166938309561174071924.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-2">
-            <img src="https://images.unsplash.com/photo-1526014440068-e21699c13b68?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+            <img src="https://cdn3.ivivu.com/2022/09/san-may-tren-deo-hai-van-ivivu-2.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-3">
-            <img src="https://images.unsplash.com/photo-1563189331-161103a3fd88?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+            <img src="https://datviettour.com.vn/uploads/images/tin-tuc-SEO/mien-trung/danh-thang/lang-chai-an-hai-chon-yen-binh-it-nguoi-biet.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-4">
-            <img src="https://images.unsplash.com/photo-1589782182703-2aad69b82142?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+            <img src="https://www.datchinrongtravel.com/uploads/post/canh-dong-nuoc-noi-an-giang.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover">
           </div>
         </div>
       </div>
@@ -311,11 +896,19 @@
     });
 
     // Mobile menu
-    const mobileToggle = document.getElementById('mobile-toggle');
-    mobileToggle.addEventListener('click', () => {
-      // Add logic here if needed
-      alert("Menu mobile đã được nhấn!");
+    const menu = document.getElementById('radial-menu');
+    const btn = document.getElementById('radial-toggle');
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      menu.classList.toggle('active');
     });
+
+    // Đóng khi click ra ngoài
+    document.addEventListener('click', () => menu.classList.remove('active'));
+
+    // Load icon Lucide
+    lucide.createIcons();
   </script>
 </body>
 </html>
