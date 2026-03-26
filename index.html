@@ -235,8 +235,19 @@
       font-style: normal;
     }
 
+    @font-face {
+      font-family: 'Non';
+      src: url('font1.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
     .custom-font {
       font-family: 'Halone-Regular', sans-serif;
+    }
+
+    .custom-font1 {
+      font-family: 'Non', sans-serif;
     }
 
     html {
@@ -440,8 +451,26 @@
     }
   </style>
 </head>
+<!-- MODAL -->
+<div id="detail-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-[999]">
+
+  <div class="bg-slate-900 text-white w-[90%] max-w-xl rounded-2xl p-6 relative shadow-2xl border border-white/10">
+
+    <!-- Nút X -->
+    <button id="close-modal" class="absolute top-3 right-3 text-white/60 hover:text-red-400 text-xl">
+      ✕
+    </button>
+
+    <!-- Nội dung -->
+    <h2 id="modal-title" class="text-2xl font-bold text-golden-300 mb-3 custom-font"></h2>
+    <p id="modal-content" class="text-white/70 leading-relaxed custom-font1" class="font-size : 20px"></p>
+  </div>
+</div>
 
 <body class="h-full bg-slate-950 text-white font-body">
+  <audio id="shutter-sound" preload="auto">
+  <source src="cam.mp3" type="audio/mpeg">
+</audio>
   <div id="app-wrapper" class="w-full h-full overflow-auto">
     <!-- Navigation -->
     <nav id="main-nav" class="nav-glass fixed top-0 left-0 right-0 z-50 bg-slate-950/60">
@@ -500,6 +529,9 @@
               <img src="thung.png" class="nav-pc-petal" alt="">
             </a>
 
+            <a href="#gallery" class="border-2 border-white/30 text-white font-medium px-8 py-4 rounded-full text-lg hover:bg-white/10 transition-all inline-flex items-center gap-2" onclick="playShutterSound()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="camera" class="lucide lucide-camera w-5 h-5"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
+          </a>
           </div>
           <!-- Mobile Radial Menu - Góc trên bên phải -->
           <div id="radial-menu" class="md:hidden fixed top-24 right-8 z-[100] w-16 h-16">
@@ -542,11 +574,12 @@
                 <div class="petal-content"><img src="petal.png" class="petal-img "></div>
               </div>
               <div class="petal-menu-item decor-only" style="--angle: 135deg; --dist: 58px;">
-                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
+                <div class="petal-content"><img src="petal.png" class="petal-img ">
+                </div>
               </div>
-              <div class="petal-menu-item decor-only" style="--angle: 180deg; --dist: 58px;">
-                <div class="petal-content"><img src="petal.png" class="petal-img "></div>
-              </div>
+              <a href="#gallery" class="petal-menu-item" style="--angle: 180deg; --dist: 58px;"><div>
+                <div class="petal-content"><img src="petal.png" class="petal-img "><span class="petal-label">Thư Viện</span></div>
+              </div></a>
               <div class="petal-menu-item below" style="--angle: -30deg; --dist: 58px;">
                 <div class="petal-content"><img src="petal.png" class="petal-img "></div>
               </div>
@@ -599,10 +632,6 @@
             class="bg-golden-500 text-slate-900 font-bold px-8 py-4 rounded-full text-lg hover:bg-golden-400 transition-all inline-flex items-center gap-2 shadow-lg shadow-golden-500/20">
             <i data-lucide="compass" class="w-5 h-5"></i> Bắt đầu hành trình
           </a>
-          <a href="#gallery"
-            class="border-2 border-white/30 text-white font-medium px-8 py-4 rounded-full text-lg hover:bg-white/10 transition-all inline-flex items-center gap-2">
-            <i data-lucide="camera" class="w-5 h-5"></i> Bộ sưu tập
-          </a>
         </div>
       </div>
     </section>
@@ -627,8 +656,8 @@
             <div class="relative h-60">
               <img
                 src="https://cdn3.ivivu.com/2022/09/36-ph%E1%BB%91-ph%C6%B0%E1%BB%9Dng.jpg?auto=format&fit=crop&q=80&w=800"
-                class="w-full h-full object-cover" alt="Hà Nội">
-              <div class="absolute top-4 right-4 bg-golden-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full">
+                class="w-full h-full object-cover" alt="Hà Nội" onclick="openModal('Hà Nội', '-Hà Nội trong mắt kẻ lữ hành là một bản giao hưởng giữa nét cổ kính ngàn năm và nhịp thở đương đại hối hả. Nhắc đến Thủ đô, người ta nhớ về một Hồ Gươm xanh ngắt, nơi tháp Rùa đứng trầm mặc giữa dòng thời gian, hay những con ngõ nhỏ lắt léo của 36 phố phường rêu phong. Mỗi góc phố, mỗi hàng cây cơm nguội vàng hay hơi ấm của một bát phở nghi ngút khói giữa mùa đông giá rét đều mang trong mình linh hồn và bề dày lịch sử của mảnh đất Thăng Long văn hiến.\n\n-Khi thu sang, Hà Nội lại dịu dàng lạ thường với mùi hoa sữa nồng nàn lan tỏa trong gió heo may. Những tà áo dài thướt tha bên thành cửa Bắc, tiếng chuông chùa Trấn Quốc ngân vang trong chiều tà tạo nên một khoảng lặng bình yên giữa lòng đô thị. Hà Nội không chỉ là một thành phố, đó là một miền ký ức, là nơi mà mỗi bước chân đi qua đều chạm vào một trang sử cũ, đầy tự hào và cũng đầy chất thơ.')">
+              <div class="absolute top-4 right-4 bg-golden-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full" >
                 Thủ đô</div>
             </div>
             <div class="p-6">
@@ -641,7 +670,7 @@
             class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 fade-up stagger-2">
             <div class="relative h-60">
               <img src="https://storage.googleapis.com/blogvxr-uploads/2019/02/sapa.jpg?auto=format&fit=crop&q=80&w=800"
-                class="w-full h-full object-cover" alt="Sa Pa">
+                class="w-full h-full object-cover" alt="Sa Pa" onclick="openModal('Sa Pa', '-Sa Pa hiện lên như một thị trấn huyền thoại chìm trong mây ngàn, nơi đất trời gặp gỡ giữa đỉnh Fansipan hùng vĩ. Những thửa ruộng bậc thang uốn lượn như những nấc thang lên thiên đường, thay màu áo mới theo từng mùa: khi thì xanh mướt sức sống, lúc lại vàng rực rỡ dưới nắng thu. Giữa không gian bao la ấy, những bản làng của người mông, người Dao nằm thấp thoáng, mang đến một vẻ đẹp hoang sơ, thuần khiết của đại ngàn Tây Bắc.\n\n-Đêm về, Sa Pa khoác lên mình cái lạnh se sắt nhưng ấm áp tình người bên bếp lửa hồng. Tiếng khèn, tiếng sáo gọi bạn tình vang vọng giữa phiên chợ Tình, hòa cùng làn sương mờ ảo che phủ những mái nhà gỗ đơn sơ. Sa Pa không chỉ chinh phục con người bằng cảnh sắc kỳ vĩ, mà còn bằng hơi thở bình dị của văn hóa vùng cao, khiến ai đã một lần đặt chân đến đều mang theo nỗi nhớ khôn nguôi về một miền rẻo cao lộng gió.')">
               <div class="absolute top-4 right-4 bg-forest-600 text-white text-xs font-bold px-3 py-1 rounded-full">Tây
                 Bắc</div>
             </div>
@@ -655,7 +684,7 @@
             class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 fade-up stagger-3">
             <div class="relative h-60">
               <img src="https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&q=80&w=800"
-                class="w-full h-full object-cover" alt="Hạ Long">
+                class="w-full h-full object-cover" alt="Hạ Long" onclick="openModal('Vịnh Hạ Long', '-Hạ Long hiện ra trước mắt như một tác phẩm điêu khắc vĩ đại của tạo hóa, nơi hàng ngàn đảo đá vôi muôn hình vạn trạng soi bóng xuống làn nước xanh ngọc bích. Những hang động kỳ ảo như Sửng Sốt hay Thiên Cung mở ra một thế giới thần thoại với những khối thạch nhũ lung linh, kể lại những câu chuyện từ thuở hồng hoang. Vẻ đẹp của Hạ Long là sự kết hợp tuyệt mỹ giữa đá, nước và bầu trời, tạo nên một không gian thoát tục, xứng danh kỳ quan thiên nhiên của thế giới.\n\n-Lênh đênh trên cánh buồm giữa buổi hoàng hôn, khi ánh mặt trời nhuộm đỏ rực những rặng núi đá, du khách sẽ cảm nhận được sự tĩnh lặng tuyệt đối của biển cả. Tiếng sóng vỗ nhẹ vào mạn thuyền hòa cùng tiếng gió rít qua khe đá tạo nên khúc nhạc du dương của đại dương. Hạ Long không chỉ là điểm đến, mà là một trải nghiệm tâm hồn, nơi con người được chiêm ngưỡng sự vô hạn của thiên nhiên và tìm thấy sự thư thái trong trái tim mình.')">
               <div class="absolute top-4 right-4 bg-ocean-600 text-white text-xs font-bold px-3 py-1 rounded-full">
                 UNESCO</div>
             </div>
@@ -675,7 +704,7 @@
           <div class="rounded-3xl overflow-hidden h-96 shadow-2xl fade-left">
             <img
               src="https://www.kkday.com/vi/blog/wp-content/uploads/6f6a69d3f924397a6035.jpg?auto=format&fit=crop&q=80&w=1200"
-              class="w-full h-full object-cover" alt="Huế">
+              class="w-full h-full object-cover" alt="Huế" onclick="openModal('Cố Đô Huế', '-Huế hiện lên với vẻ đẹp trầm mặc và cung đình, nơi dòng sông Hương thơ mộng lững lờ trôi qua những lăng tẩm uy nghiêm của triều Nguyễn. Nhắc đến Huế là nhớ về bóng dáng tà áo dài tím thướt tha trên cầu Trường Tiền, về tiếng chuông chùa Thiên Mụ ngân vang trong buổi chiều tà. Kinh thành Huế với những bức tường gạch cổ kính, những điện đài rêu phong không chỉ là một di sản kiến trúc mà còn là chứng nhân của một thời vàng son, lộng lẫy và đầy hoài niệm.\n\n-Trong không gian tĩnh lặng ấy, ẩm thực Huế và nhã nhạc cung đình lại mang đến một chiều sâu văn hóa tinh tế. Từ chén trà cung đình thanh tao đến những món ăn được bày biện tỉ mỉ, mỗi chi tiết đều toát lên cốt cách thanh cao của người dân cố đô. Huế không vội vã, Huế dịu dàng và đằm thắm, khiến lòng người lữ khách bỗng chốc trở nên nhẹ tênh, như được đắm mình trong một giấc mơ xưa cũ đầy lãng mạn.')">
           </div>
           <div class="fade-right">
             <span
@@ -693,7 +722,8 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <!-- Hội An -->
           <div
-            class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 fade-up stagger-2">
+            class="card-destination rounded-2xl overflow-hidden bg-slate-900 border border-white/10 fade-up stagger-2"
+            onclick="openModal('Hội An', '-Hội An hiện lên trong tâm tưởng lữ khách như một miền ký ức vàng son, nơi thời gian dường như ngưng đọng bên những nếp nhà cổ kính. Nhắc đến nơi này, người ta không thể không nhớ về Chùa Cầu, một biểu tượng kiến trúc độc đáo vắt mình qua dòng lạch nhỏ với mái ngói âm dương thâm nâu và những nét chạm khắc tinh xảo mang đậm dấu ấn giao thoa văn hóa Việt - Nhật. Ngôi chùa không chỉ là nhịp cầu nối liền đôi bờ mà còn là linh hồn của phố hội, đứng trầm mặc soi bóng xuống dòng sông Hoài đầy thơ mộng.\n\n-Khi màn đêm buông xuống, Hội An lại khoác lên mình vẻ đẹp huyền ảo của những chiếc đèn lồng rực rỡ sắc màu. Những ánh sáng lung linh, huyền hoặc phát ra từ các khung tre bọc lụa tơ tằm mềm mại đã tạo nên một không gian cổ tích giữa đời thực, giăng mắc khắp các ngả đường và len lỏi vào từng con ngõ nhỏ. Sự kết hợp giữa vẻ uy nghiêm của Chùa Cầu và sự duyên dáng của đèn lồng đã biến phố cổ thành một bức tranh thủy mặc sống động, khiến bất cứ ai một lần đặt chân đến cũng phải say đắm trước vẻ đẹp tĩnh lặng mà đầy sức sống của mảnh đất này.')">
             <div class="relative h-60">
               <img
                 src="https://bcp.cdnchinhphu.vn/334894974524682240/2025/9/18/cdhoian5-17581621538711341831070.jpeg?auto=format&fit=crop&q=80&w=800"
@@ -718,7 +748,7 @@
             <div class="relative h-60">
               <img
                 src="https://benduthuyendanang.com/wp-content/uploads/Tour-xem-cau-rong-phun-lua-768x488.jpg?auto=format&fit=crop&q=80&w=800"
-                class="w-full h-full object-cover" alt="Đà Nẵng">
+                class="w-full h-full object-cover" alt="Đà Nẵng" onclick="openModal('Đà Nẵng', '-Đà Nẵng được mệnh danh là thành phố của những cây cầu, nơi nhịp sống hiện đại hòa quyện cùng vẻ đẹp hoang sơ của biển Mỹ Khê xanh ngắt. Từ đỉnh Ngũ Hành Sơn huyền bí nhìn xuống, thành phố hiện lên rực rỡ với cầu Rồng phun lửa đầy kiêu hãnh hay cầu Vàng lửng lơ giữa mây ngàn Bà Nà Hills. Đà Nẵng không chỉ năng động với những công trình tầm cỡ mà còn giữ cho mình tâm hồn phóng khoáng của những người con xứ biển miền Trung đầy nắng gió.\n\n-Khi thành phố lên đèn, Đà Nẵng lại trở nên lung linh huyền ảo với muôn vàn sắc màu phản chiếu xuống dòng sông Hàn. Sự bình yên của bán đảo Sơn Trà với linh ứng chùa Linh Ứng đứng sừng sững bảo vệ thành phố mang lại cảm giác an tâm và thư thái. Đà Nẵng là điểm đến của sự kết nối, nơi thiên nhiên và con người cùng viết nên bản tình ca về một đô thị xanh, sạch và đầy lòng hiếu khách.')">
               <div class="absolute top-4 right-4 bg-lightocean-600 text-white text-xs font-bold px-3 py-1 rounded-full">
                 Thành Phố Biển</div>
             </div>
@@ -727,9 +757,10 @@
               <p class="text-white/60 text-sm">Thành phố đáng sống nhất Việt Nam với Cầu Vàng nổi tiếng, bãi biển Mỹ Khê
                 tuyệt đẹp, và Bà Nà Hills huyền ảo.</p>
               <div class="mt-4 flex flex-wrap gap-2">
-                <span class="bg-golden-700/50 text-golden-200 text-xs px-3 py-1 rounded-full">Cầu Vàng</span> 
-                <span class="bg-hill-700/50 text-hill-200 text-xs px-3 py-1 rounded-full">Bà Nà Hills</span> 
-                <span class="bg-lightocean-700/50 text-lightocean-200 text-xs px-3 py-1 rounded-full">Mỹ Khê</span></div>
+                <span class="bg-golden-700/50 text-golden-200 text-xs px-3 py-1 rounded-full">Cầu Vàng</span>
+                <span class="bg-hill-700/50 text-hill-200 text-xs px-3 py-1 rounded-full">Bà Nà Hills</span>
+                <span class="bg-lightocean-700/50 text-lightocean-200 text-xs px-3 py-1 rounded-full">Mỹ Khê</span>
+              </div>
             </div>
           </div>
         </div>
@@ -748,7 +779,7 @@
           <div class="card-destination rounded-2xl overflow-hidden fade-up stagger-1">
             <img
               src="https://bcp.cdnchinhphu.vn/334894974524682240/2025/6/30/tphcm-1-1751245519173693919081.jpg?auto=format&fit=crop&q=80&w=800"
-              class="h-80 w-full object-cover" alt="Sài Gòn">
+              class="h-80 w-full object-cover" alt="Sài Gòn" onclick="openModal('TP. Hồ Chí Minh', '-Sài Gòn - hòn ngọc Viễn Đông - là tâm điểm của sự sôi động và nhiệt huyết, nơi những tòa nhà chọc trời như Landmark 81 vươn mình kiêu hãnh bên cạnh những công trình kiến trúc Pháp cổ kính như Nhà thờ Đức Bà hay Bưu điện Thành phố. Nhịp sống nơi đây không bao giờ ngưng nghỉ, từ tiếng còi xe hối hả ban ngày đến những ánh đèn neon rực rỡ của phố đi bộ Bùi Viện khi đêm về. Sài Gòn quyến rũ bởi sự bao dung, nơi hội tụ tinh hoa từ mọi miền đất nước để tạo nên một bản sắc đa dạng và phóng khoáng.\n\n-Dưới lớp vỏ hào nhoáng ấy, Sài Gòn vẫn giữ cho mình những góc nhỏ bình yên bên những quán cà phê bệt vỉa hè hay những gánh hàng rong thơm nức mùi kỷ niệm. Người Sài Gòn chân phương, thẳng thắn và nồng hậu, luôn sẵn lòng dang tay đón nhận những tâm hồn xa xứ. Thành phố này không chỉ là trung tâm kinh tế, mà còn là vùng đất của những cơ hội, những ước mơ và cả những hoài niệm về một thời xưa cũ đầy tình người giữa nhịp sống hối hả.')">
             <div class="p-4 text-center">
               <h3 class="font-bold">TP. Hồ Chí Minh</h3>
               <h5>đô thị sôi động bậc nhất Việt Nam, nổi bật với Landmark 81 và nhịp sống hiện đại, phát triển không
@@ -757,32 +788,38 @@
                 <span class="bg-golden-700/50 text-golden-200 text-xs px-3 py-1 rounded-full">LandMark 81</span>
                 <span class="bg-red-700/50 text-red-200 text-xs px-3 py-1 rounded-full">Chợ Bến Thành</span>
               </div>
-                </div>
             </div>
-            <div class="card-destination rounded-2xl overflow-hidden fade-up stagger-2">
-              <img src="https://www.kkday.com/vi/blog/wp-content/uploads/hon-mong-tay-phu-quoc-19_1625565144.jpg?auto=format&fit=crop&q=80&w=800"
-                class="h-80 w-full object-cover" alt="Phú Quốc">
-              <div class="p-4 text-center">
-                <h3 class="font-bold">Phú Quốc</h3>
-                <h5 >Đảo ngọc thiên đường với hoàng hôn tuyệt đẹp, nước biển trong xanh, resort sang trọng, và hải sản tươi ngon bậc nhất.</h5>
-              </div>
+          </div>
+          <div class="card-destination rounded-2xl overflow-hidden fade-up stagger-2">
+            <img
+              src="https://www.kkday.com/vi/blog/wp-content/uploads/hon-mong-tay-phu-quoc-19_1625565144.jpg?auto=format&fit=crop&q=80&w=800"
+              class="h-80 w-full object-cover" alt="Phú Quốc" onclick="openModal('Phú Quốc', '-Phú Quốc hiện lên như một viên ngọc lục bảo rực rỡ giữa vịnh Thái Lan, nơi những bãi cát trắng mịn như kem ôm lấy làn nước biển trong xanh ngọc bích. Nhắc đến Đảo Ngọc là nhắc đến những hoàng hôn tím ngắt tan chảy trên Bãi Ông Lang, hay những rặng san hô lộng lẫy sắc màu dưới đáy đại dương vùng An Thới. Phú Quốc không chỉ là thiên đường nghỉ dưỡng với những resort sang trọng, mà còn là nơi lưu giữ nét hoang sơ của những cánh rừng nguyên sinh và những làng chài bình dị ven biển.\n\n-Đêm về trên đảo, chợ đêm Phú Quốc lại nhộn nhịp với mùi thơm của hải sản nướng và sự nồng hậu của người dân xứ đảo. Tiếng sóng vỗ rì rào vào mạn thuyền câu mực phía xa tạo nên một không gian thư thái đến lạ kỳ. Giữa sự phát triển mạnh mẽ, Phú Quốc vẫn giữ được linh hồn của biển cả, mang đến cảm giác tự do và phóng khoáng, khiến ai đã đến một lần đều ước ao được mãi mãi đắm mình trong vẻ đẹp thuần khiết của hòn đảo này.')">
+            <div class="p-4 text-center">
+              <h3 class="font-bold">Phú Quốc</h3>
+              <h5>Đảo ngọc thiên đường với hoàng hôn tuyệt đẹp, nước biển trong xanh, resort sang trọng, và hải sản tươi
+                ngon bậc nhất.</h5>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="bg-red-700/50 text-red-200 text-xs px-3 py-1 rounded-full">Hoàng Hôn</span>
+              <span class="bg-ocean-700/50 text-ocean-200 text-xs px-3 py-1 rounded-full">Lặn Biển</span>
+            </div>
+          </div>
+          <div class="card-destination rounded-2xl overflow-hidden fade-up stagger-3">
+            <img
+              src="https://datviettour.com.vn/uploads/images/mientay/cantho/danh-thang/du-lich-cho-noi-cai-rang-mien-tay.jpg?auto=format&fit=crop&q=80&w=800"
+              class="h-80 w-full object-cover" alt="Cần Thơ" onclick="openModal('Cần Thơ', '-Cần Thơ hiện lên với vẻ đẹp trù phú của miền sông nước Cửu Long, nơi chợ nổi Cái Răng rộn ràng tiếng rao hàng trên những mảng ghe xuồng tấp nập lúc bình minh. Hình ảnh những chiếc xuồng ba lá len lỏi giữa rừng dừa nước, những vườn cây ăn trái sum suê trĩu quả tạo nên một bức tranh đồng quê thanh bình, no ấm. Cần Thơ gạo trắng nước trong, nơi con người sống hiền hòa, đôn hậu giữa mênh mông sông nước, mang đậm cốt cách hào sảng của người phương Nam.\n\n-Chiều về trên bến Ninh Kiều, khi làn gió sông thổi mát rượi, du khách sẽ cảm nhận được nhịp thở dịu dàng của thủ phủ miền Tây. Ánh đèn từ những du thuyền lấp lánh trên dòng sông Hậu hòa cùng tiếng đờn ca tài tử vang vọng phía xa xa tạo nên một không gian đậm chất trữ tình. Cần Thơ không cần sự lộng lẫy phô trương, nét duyên thầm của những dải lục bình trôi và nụ cười rạng rỡ của người dân quê chính là sợi dây vô hình níu chân người lữ khách chẳng muốn rời xa.')">
+            <div class="p-4 text-center">
+              <h3 class="font-bold">Cần Thơ</h3>
+              <h5>Thủ phủ miền Tây sông nước với chợ nổi Cái Răng rộn ràng, vườn trái cây sum suê, và nhịp sống bình dị
+                ven sông.</h5>
               <div class="mt-4 flex flex-wrap gap-2">
-                <span class="bg-red-700/50 text-red-200 text-xs px-3 py-1 rounded-full">Hoàng Hôn</span>
-                <span class="bg-ocean-700/50 text-ocean-200 text-xs px-3 py-1 rounded-full">Lặn Biển</span></div>
-            </div>
-            <div class="card-destination rounded-2xl overflow-hidden fade-up stagger-3">
-              <img src="https://datviettour.com.vn/uploads/images/mientay/cantho/danh-thang/du-lich-cho-noi-cai-rang-mien-tay.jpg?auto=format&fit=crop&q=80&w=800"
-                class="h-80 w-full object-cover" alt="Cần Thơ">
-              <div class="p-4 text-center">
-                <h3 class="font-bold">Cần Thơ</h3>
-                <h5>Thủ phủ miền Tây sông nước với chợ nổi Cái Răng rộn ràng, vườn trái cây sum suê, và nhịp sống bình dị ven sông.</h5>
-                <div class="mt-4 flex flex-wrap gap-2">
-                  <span class="bg-lightocean-700/50 text-lightocean-200 text-xs px-3 py-1 rounded-full">Chợ Nổi</span>
-                  <span class="bg-forest-700/50 text-forest-200 text-xs px-3 py-1 rounded-full">Vườn Trái Cây</span></div>
+                <span class="bg-lightocean-700/50 text-lightocean-200 text-xs px-3 py-1 rounded-full">Chợ Nổi</span>
+                <span class="bg-forest-700/50 text-forest-200 text-xs px-3 py-1 rounded-full">Vườn Trái Cây</span>
               </div>
             </div>
           </div>
         </div>
+      </div>
     </section>
 
     <!-- Ẩm thực -->
@@ -795,25 +832,28 @@
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
           <div class="food-card bg-slate-800 rounded-2xl overflow-hidden border border-white/5 fade-up stagger-1">
             <img src="https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?auto=format&fit=crop&q=80&w=600"
-              class="h-48 w-full object-cover" alt="Phở">
+              class="h-48 w-full object-cover" alt="Phở" onclick="openModal('Phở Hà Nội', '-Phở không chỉ là một món ăn, đó là tinh hoa, là linh hồn của Hà Thành được chưng cất qua bao thế hệ. Một bát phở chuẩn vị phải bắt đầu từ nồi nước dùng trong vắt nhưng đậm đà, ngọt thanh từ xương bò ninh nhừ cùng quế, hồi, gừng nướng thơm nồng. Những sợi bánh phở trắng mềm, mỏng tang như dải lụa nằm ẩn mình dưới những lát thịt bò tươi ngon, điểm xuyết thêm màu xanh của hành hoa và lát ớt đỏ rực tạo nên một bức tranh ẩm thực đầy mê hoặc.\n\n-Hít hà hơi khói nghi ngút bốc lên từ bát phở giữa buổi sáng tinh sương, thực khách sẽ cảm nhận được hơi thở của phố phường cổ kính. Thêm một chút giấm tỏi, một chút chanh cốm, miếng quẩy giòn tan nhúng vào nước dùng béo ngậy, tất cả hòa quyện tạo nên một hương vị thanh tao mà nồng nàn. Phở Hà Nội chính là nỗi nhớ của người đi xa, là niềm tự hào của người ở lại, một món quà giản dị nhưng chứa đựng cả một bầu trời văn hóa thiêng liêng.')">
             <div class="p-4 text-center font-bold text-golden-300">Phở Hà Nội</div>
           </div>
           <div class="food-card bg-slate-800 rounded-2xl overflow-hidden border border-white/5 fade-up stagger-2">
-            <img src="https://cafefcdn.com/203337114487263232/2023/9/12/banhmi-16945047945811495140150-1694522697193-16945226975611698241211.png?auto=format&fit=crop&q=80&w=600"
-              class="h-48 w-full object-cover" alt="Bánh mì">
+            <img
+              src="https://cafefcdn.com/203337114487263232/2023/9/12/banhmi-16945047945811495140150-1694522697193-16945226975611698241211.png?auto=format&fit=crop&q=80&w=600"
+              class="h-48 w-full object-cover" alt="Bánh mì" onclick="openModal('Bánh Mì', '-Được mệnh danh là món sandwich ngon nhất thế giới, bánh mì Việt Nam là sự giao thoa tuyệt mỹ giữa văn hóa ẩm thực Pháp và sự sáng tạo tinh tế của người Việt. Ổ bánh mì vàng rộm, lớp vỏ giòn tan vỡ vụn khi chạm môi, để lộ phần ruột mềm mại, nóng hổi bên trong. Sự quyến rũ của bánh mì nằm ở sự hài hòa đến kinh ngạc của các nguyên liệu: vị béo ngậy của pate, bơ trứng, vị đậm đà của thịt nguội, chả lụa hòa cùng chút chua thanh của đồ chua, cay nồng của ớt và hương thơm đặc trưng của rau ngò.\n\n-Mỗi vùng miền lại có một biến tấu riêng, từ bánh mì que nhỏ xinh của Hải Phòng đến bánh mì xíu mại Đà Lạt mộng mơ hay bánh mì đầy ắp nhân của Sài Gòn sôi động. Bánh mì là món ăn của sự tự do, có thể thưởng thức ở bất cứ đâu, từ góc phố nhỏ đến những nhà hàng sang trọng. Đó là biểu tượng cho nhịp sống năng động và tinh thần hòa nhập nhưng không mất bản sắc của con người Việt Nam.')">
             <div class="p-4 text-center font-bold text-golden-300">Bánh Mì</div>
           </div>
           <div class="food-card bg-slate-800 rounded-2xl overflow-hidden border border-white/5 fade-up stagger-3">
-            <img src="https://cdn11.dienmaycholon.vn/filewebdmclnew/public/userupload/files/kien-thuc/cach-nau-bun-bo-hue-bang-goi-gia-vi/cach-nau-bun-bo-hue-bang-goi-gia-vi-1.jpg?auto=format&fit=crop&q=80&w=600"
-              class="h-48 w-full object-cover" alt="Bún bò">
+            <img
+              src="https://cdn11.dienmaycholon.vn/filewebdmclnew/public/userupload/files/kien-thuc/cach-nau-bun-bo-hue-bang-goi-gia-vi/cach-nau-bun-bo-hue-bang-goi-gia-vi-1.jpg?auto=format&fit=crop&q=80&w=600"
+              class="h-48 w-full object-cover" alt="Bún bò" onclick="openModal('Bún Bò Huế', '-Nếu Huế là một bài thơ mộng mơ thì Bún Bò chính là nốt nhạc trầm bổng nhất trong bài thơ ấy. Món ăn này là sự hội tụ đầy đủ các cung bậc vị giác: vị ngọt của xương, vị đậm đà của mắm ruốc đặc trưng, vị cay nồng của sả ớt và chút chua nhẹ của chanh tươi. Những sợi bún to tròn, trắng ngần nằm cạnh miếng giò heo béo ngậy, lát thịt bò bắp hoa mềm mại và viên chả cua vàng rực, tạo nên một sự kết hợp hoàn hảo cả về sắc lẫn hương.\n\n-Thưởng thức bún bò phải có thêm rổ rau sống tươi rói, ít bắp chuối bào mỏng và lá quế thơm nồng. Húp một thìa nước dùng sóng sánh mỡ nổi màu điều, thực khách sẽ cảm nhận được cái tình của người cố đô - tỉ mỉ, cầu kỳ và đầy tinh tế. Bún bò Huế không chỉ để ăn cho no, mà để thưởng thức một di sản, để thấy được cốt cách thanh cao ẩn sau vẻ ngoài bình dị của người dân vùng đất Thừa Thiên.')">
             <div class="p-4 text-center font-bold text-golden-300">Bún Bò Huế</div>
           </div>
           <div class="food-card bg-slate-800 rounded-2xl overflow-hidden border border-white/5 fade-up stagger-4">
-            <img src="https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/2023_10_23_638336957766719361_cach-lam-goi-cuon.jpg?auto=format&fit=crop&q=80&w=600"
-              class="h-48 w-full object-cover" alt="Gỏi cuốn">
+            <img
+              src="https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/2023_10_23_638336957766719361_cach-lam-goi-cuon.jpg?auto=format&fit=crop&q=80&w=600"
+              class="h-48 w-full object-cover" alt="Gỏi cuốn" onclick="openModal('Gỏi Cuốn', '-Gỏi cuốn là đại diện tiêu biểu cho triết lý ẩm thực tươi lành và cân bằng của người Việt. Những nguyên liệu giản đơn như tôm luộc đỏ âu, thịt ba chỉ trắng mềm, bún tươi và các loại rau thơm được gói ghém một cách khéo léo bên trong lớp bánh tráng mỏng manh, trong suốt. Nhìn từ bên ngoài, gỏi cuốn như một tác phẩm nghệ thuật nhỏ xinh, phô diễn sự tươi ngon của từng nguyên liệu một cách đầy chân thực và lôi cuốn.\n\n-Linh hồn của món ăn này chính là bát nước chấm tương đậu béo ngậy, có thêm chút đậu phộng giã nhỏ và đồ chua cay nồng. Vị ngọt của tôm thịt, vị mát của rau sống hòa quyện cùng nước chấm đậm đà tạo nên một cảm giác sảng khoái, nhẹ nhàng mà không hề gây ngán. Gỏi cuốn không chỉ là món khai vị, mà còn là biểu tượng cho sự tinh tế trong cách ăn uống của người phương Nam - mộc mạc, gần gũi nhưng cực kỳ cuốn hút.')">
             <div class="p-4 text-center font-bold text-golden-300">Gỏi Cuốn</div>
+          </div>
         </div>
-      </div>
     </section>
 
     <!-- Gallery -->
@@ -824,57 +864,108 @@
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-1">
-            <img src="https://media.baoquangninh.vn/upload/image/202302/medium/2054615_9d9f316554c0deb966c85d637a0761ca.jpg?auto=format&fit=crop&q=80&w=600"
-              class="w-full h-full object-cover">
+            <img
+              src="https://media.baoquangninh.vn/upload/image/202302/medium/2054615_9d9f316554c0deb966c85d637a0761ca.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover"
+              onclick="openModal('Vịnh Hạ Long', '-Hạ Long hiện ra trước mắt như một tác phẩm điêu khắc vĩ đại của tạo hóa, nơi hàng ngàn đảo đá vôi muôn hình vạn trạng soi bóng xuống làn nước xanh ngọc bích phẳng lặng như tờ. Nhìn từ trên cao, những hòn đảo nhô lên giữa đại dương tựa như những viên ngọc lục bảo được thiên nhiên khéo léo sắp đặt, tạo nên một mê cung huyền bí giữa trùng khơi. Vẻ đẹp của Hạ Long là sự kết hợp tuyệt mỹ giữa đá, nước và bầu trời, một không gian thoát tục khiến con người cảm thấy nhỏ bé trước sự vĩ đại của mẹ thiên nhiên.\n\n-Lênh đênh trên những cánh buồm giữa buổi sớm bình minh, khi làn sương mờ ảo còn bảng lảng quanh các chân núi đá, du khách sẽ ngỡ như mình đang lạc bước vào cõi tiên cảnh. Tiếng sóng vỗ nhẹ nhàng hòa cùng tiếng gió rít qua những khe hang động kỳ ảo như Sửng Sốt, Thiên Cung, kể lại những câu chuyện huyền thoại từ thuở hồng hoang. Hạ Long không chỉ là một kỳ quan thế giới, mà còn là nơi lưu giữ linh hồn của biển cả, một điểm đến mà bất cứ ai cũng khao khát được một lần trong đời đắm mình vào sự tĩnh lặng và kỳ vĩ ấy.')">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-2">
             <img src="https://cdn.xanhsm.com/2025/02/50971365-le-hoi-den-long-2.jpg?auto=format&fit=crop&q=80&w=600"
-              class="w-full h-full object-cover">
+              class="w-full h-full object-cover" onclick="openModal('Lễ Hội Đèn Lồng', '-Khi hoàng hôn vừa tắt, phố cổ Hội An bừng tỉnh trong ánh sáng huyền hoặc của hàng ngàn chiếc đèn lồng đa sắc. Những khung tre bọc lụa tơ tằm mềm mại, qua bàn tay tài hoa của nghệ nhân, đã biến từng con ngõ nhỏ thành một không gian cổ tích giữa đời thực. Ánh sáng ấy không chói lòa mà dịu nhẹ, lung linh soi bóng xuống dòng sông Hoài, tạo nên một bản giao hưởng màu sắc đầy mê hoặc.\n\n-Đi giữa phố đèn lồng, thực khách như lạc bước vào miền ký ức vàng son, nơi mỗi gam màu đỏ, vàng, tím đều mang một lời chúc bình an và may mắn. Đây không chỉ là một lễ hội, mà là hơi thở, là nét đẹp văn hóa trường tồn của mảnh đất di sản này.')">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-3">
-            <img src="https://ktmt.vnmediacdn.com/images/2021/09/03/7-1630640575-khau-pha.jpg?auto=format&fit=crop&q=80&w=600"
-              class="w-full h-full object-cover">
+            <img
+              src="https://ktmt.vnmediacdn.com/images/2021/09/03/7-1630640575-khau-pha.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover" onclick="openModal('Đèo Khau Phạ', '-Được mệnh danh là một trong tứ đại đỉnh đèo của vùng cao phía Bắc, Khau Phạ hiện lên sừng sững giữa đại ngàn như một dải lụa mềm vắt ngang lưng trời. Đứng từ đỉnh đèo nhìn xuống, thung lũng Cao Phạ hiện ra với những thửa ruộng bậc thang kỳ vĩ, bao bọc bởi những dãy núi đá nhấp nhô và màn mây trắng xóa bảng lảng quanh năm.\n\n-Vẻ đẹp của Khau Phạ là sự thách thức và mời gọi, nơi con người được chạm tay vào mây, được hít hà mùi thơm của lúa chín hòa cùng không khí se lạnh của vùng cao. Khau Phạ không chỉ là một cung đường, đó là nơi cảm xúc vỡ òa trước sự vĩ đại của thiên nhiên đất Việt.')">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-4">
-            <img src="https://gocheap.vn/storage/temp/public/c25/280/a52/ha-noi-sang-som-2__800.jpg?auto=format&fit=crop&q=80&w=600"
-              class="w-full h-full object-cover">
+            <img
+              src="https://gocheap.vn/storage/temp/public/c25/280/a52/ha-noi-sang-som-2__800.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover" onclick="openModal('Hà Nội Sáng Sớm', '-Hà Nội khi bình minh vừa ló dạng mang một vẻ đẹp tĩnh lặng đến lạ kỳ, khác hẳn với sự ồn ào vội vã thường nhật. Trong màn sương mỏng tang giăng mắc trên mặt Hồ Gươm, những nếp nhà cổ và hàng cây cơm nguội vàng đứng lặng im như đang chìm trong giấc ngủ muộn. Tiếng chổi tre xào xạc của người lao công hòa cùng mùi hương hoa sữa nồng nàn tạo nên một khoảng lặng bình yên sâu lắng.\n\n-Sáng sớm Hà Nội là lúc tâm hồn người ta dễ rung cảm nhất, khi nhấp một ngụm trà nóng bên vỉa hè, ngắm nhìn thành phố thức giấc chậm rãi. Đó là nét thanh tao, đài các của một thủ đô ngàn năm văn hiến vẫn luôn hiện hữu trong từng hơi thở bình minh.')">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-1">
-            <img src="https://cdn2.tuoitre.vn/471584752817336320/2024/5/26/hue-mua-17166938309561174071924.jpg?auto=format&fit=crop&q=80&w=600"
-              class="w-full h-full object-cover">
+            <img
+              src="https://cdn2.tuoitre.vn/471584752817336320/2024/5/26/hue-mua-17166938309561174071924.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover" onclick="openModal('Huế Mùa Mưa', '-Mưa Huế không xối xả mà rỉ rả, dai dẳng như một lời tự sự buồn man mác của dòng Hương Giang. Dưới cơn mưa phùn, Đại Nội hiện lên uy nghiêm với những bức tường gạch cổ rêu phong và mái ngói lưu ly bảng lảng khói sương. Những tà áo dài tím thướt tha nép mình dưới bóng ô, tiếng mưa rơi trên lá sen tàn tạo nên một không gian đượm chất trữ tình và hoài niệm.\n\n-Mưa là đặc sản của cố đô, nó làm cho Huế trở nên dịu dàng và đằm thắm hơn bao giờ hết. Ngồi bên hiên nhà cổ, nghe tiếng mưa rơi và thưởng thức nhã nhạc, lữ khách sẽ thấy lòng mình bỗng chốc trở nên tĩnh lặng, như được thanh tẩy bởi vẻ đẹp u buồn nhưng đầy kiêu sa của mảnh đất thần kinh.')">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-2">
-            <img src="https://cdn3.ivivu.com/2022/09/san-may-tren-deo-hai-van-ivivu-2.jpg?auto=format&fit=crop&q=80&w=600"
-              class="w-full h-full object-cover">
+            <img
+              src="https://cdn3.ivivu.com/2022/09/san-may-tren-deo-hai-van-ivivu-2.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover" onclick="openModal('Đèo Hải Vân', '-Nằm giữa ranh giới Thừa Thiên Huế và Đà Nẵng, đèo Hải Vân hiện lên như một con rồng uốn lượn bên bờ biển Đông xanh ngắt. Vào những ngày mù sương, cả cung đường chìm trong biển mây trắng xóa, che khuất tầm nhìn nhưng lại mở ra một thiên đường kỳ ảo. Đứng ở Hải Vân Quan, ta có cảm giác như đang đứng trên đỉnh của thế giới, nơi mây và núi hòa quyện làm một.\n\n-Cái tên Hải Vân chính là sự miêu tả chính xác nhất về vẻ đẹp nơi đây: mây của trời và sóng của biển. Mỗi khúc cua tay áo đều mở ra một góc nhìn choáng ngợp, khiến bất cứ tay lái nào cũng phải nín thở trước vẻ đẹp hùng vĩ và tráng lệ của thiên hạ đệ nhất hùng quan.')">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-3">
-            <img src="https://datviettour.com.vn/uploads/images/tin-tuc-SEO/mien-trung/danh-thang/lang-chai-an-hai-chon-yen-binh-it-nguoi-biet.jpg?auto=format&fit=crop&q=80&w=600"
-              class="w-full h-full object-cover">
+            <img
+              src="https://datviettour.com.vn/uploads/images/tin-tuc-SEO/mien-trung/danh-thang/lang-chai-an-hai-chon-yen-binh-it-nguoi-biet.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover" onclick="openModal('Làng Chài An Hải', '-An Hải đón người lữ khách bằng vẻ đẹp nguyên sơ của một làng chài yên bình nằm nép mình bên bờ biển miền Trung. Hình ảnh những chiếc thuyền thúng tròn trịa nằm im lìm trên bãi cát vàng, những tấm lưới phơi dưới nắng mai và nụ cười rạng rỡ của ngư dân tạo nên một bức tranh lao động thuần khiết. Không gian nơi đây thoang thoảng mùi vị mặn mòi của biển cả và sự tĩnh lặng của một vùng quê chưa nhuốm màu công nghiệp.\n\n-Tại An Hải, thời gian như trôi chậm lại theo từng nhịp sóng vỗ. Buổi chiều tà, khi những đoàn tàu trở về đầy ắp cá tôm, làng chài lại rộn ràng một sức sống mới. Đó là vẻ đẹp của sự giản đơn, của sự gắn bó bền bỉ giữa con người và đại dương bao la.')">
           </div>
           <div class="gallery-item aspect-square rounded-xl overflow-hidden zoom-in stagger-4">
-            <img src="https://www.datchinrongtravel.com/uploads/post/canh-dong-nuoc-noi-an-giang.jpg?auto=format&fit=crop&q=80&w=600"
-              class="w-full h-full object-cover">
+            <img
+              src="https://www.datchinrongtravel.com/uploads/post/canh-dong-nuoc-noi-an-giang.jpg?auto=format&fit=crop&q=80&w=600"
+              class="w-full h-full object-cover" onclick="openModal('Mùa Nước Nổi An Giang', '-Khi mùa nước nổi đổ về, An Giang biến thành một vùng sông nước mênh mông, nơi những cánh đồng bỗng chốc trở thành biển hồ lấp lánh lục bình trôi. Những rặng thốt nốt soi bóng xuống mặt nước soi gương, những chiếc ghe xuồng len lỏi giữa rừng tràm xanh mướt tạo nên một vẻ đẹp đặc trưng không đâu có được của miền Tây Nam Bộ.\n\n-Mùa nước nổi không chỉ mang theo phù sa bồi đắp cho đất đai, mà còn mang theo nguồn sản vật dồi dào và linh hồn của con người vùng lũ. Ngắm hoàng hôn buông xuống trên cánh đồng ngập nước, thực khách sẽ thấy yêu sao vẻ đẹp phóng khoáng, hào sảng và đôn hậu của mảnh đất và con người nơi cuối nguồn phương Nam.')">
           </div>
         </div>
       </div>
     </section>
 
     <!-- Footer -->
-    <footer class="py-16 bg-slate-950 border-t border-white/5">
-      <div class="max-w-7xl mx-auto px-4 text-center">
-        <div class="flex items-center justify-center gap-3 mb-6">
-          <span class="text-3xl">🇻🇳</span>
-          <span class="font-display font-bold text-2xl text-golden-300">Vòng Quanh Việt Nam</span>
+    <footer class="relative py-16 bg-slate-950">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+          <div class="flex items-center justify-center gap-3 mb-4"><img src="icon.png" alt="Vòng Quanh Việt Nam"
+              class="w-12 h-12"> <span class="font-display font-bold text-2xl text-golden-300">Vòng Quanh Việt
+              Nam</span>
+          </div>
+          <p class="text-white/50 max-w-lg mx-auto">Hãy để mỗi chuyến đi là một câu chuyện. Việt Nam — nơi thiên nhiên,
+            văn hóa và con người hòa quyện thành những kỷ niệm không thể nào quên.</p>
+        </div><!-- Social links -->
+        <div class="flex items-center justify-center gap-4 mb-8"><button
+            class="w-11 h-11 rounded-full bg-white/10 hover:bg-golden-500/30 border border-white/10 hover:border-golden-500/50 flex items-center justify-center transition-all"
+            aria-label="Facebook"> <i data-lucide="facebook" class="w-5 h-5 text-white/70"></i> </button> <button
+            class="w-11 h-11 rounded-full bg-white/10 hover:bg-golden-500/30 border border-white/10 hover:border-golden-500/50 flex items-center justify-center transition-all"
+            aria-label="Instagram"> <i data-lucide="instagram" class="w-5 h-5 text-white/70"></i> </button> <button
+            class="w-11 h-11 rounded-full bg-white/10 hover:bg-golden-500/30 border border-white/10 hover:border-golden-500/50 flex items-center justify-center transition-all"
+            aria-label="Twitter"> <i data-lucide="twitter" class="w-5 h-5 text-white/70"></i> </button> <button
+            class="w-11 h-11 rounded-full bg-white/10 hover:bg-golden-500/30 border border-white/10 hover:border-golden-500/50 flex items-center justify-center transition-all"
+            aria-label="Email"> <i data-lucide="mail" class="w-5 h-5 text-white/70"></i> </button>
         </div>
-        <p class="text-white/40 text-sm mb-8">© 2026 Hành trình di sản Việt Nam. Tất cả quyền được bảo lưu.</p>
-        <a href="#hero" class="text-golden-400 hover:text-white transition-colors inline-flex items-center gap-2">
-          <i data-lucide="arrow-up" class="w-4 h-4"></i> Về đầu trang
-        </a>
+        <div class="flex items-center justify-center gap-6 text-sm text-white/40 mb-8 flex-wrap"><span>📧
+            namcucmochi@vqvn.vn</span> <span>📞 0976xxx133</span>
+        </div>
+        <div class="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p id="footer-text" class="text-white/40 text-sm">© 2026 Vòng quanh Việt Nam. Tất cả quyền được bảo lưu.</p><a
+            href="#hero"
+            class="inline-flex items-center gap-2 text-golden-400 hover:text-golden-300 text-sm font-medium transition-colors group">
+            <i data-lucide="arrow-up" class="w-4 h-4 group-hover:-translate-y-1 transition-transform"></i> Về đầu trang
+          </a>
+        </div>
       </div>
     </footer>
   </div>
 
   <script>
+    const modal = document.getElementById('detail-modal');
+    const title = document.getElementById('modal-title');
+    const content = document.getElementById('modal-content');
+    const closeBtn = document.getElementById('close-modal');
+
+    function openModal(t, c) {
+      title.innerText = t;
+      content.innerText = c;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    closeBtn.addEventListener('click', closeModal);
+
+    // click ra ngoài để đóng
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
     // Initialize Lucide icons
     lucide.createIcons();
 
@@ -909,6 +1000,18 @@
 
     // Load icon Lucide
     lucide.createIcons();
+    function playShutterSound() {
+  const sound = document.getElementById('shutter-sound');
+  
+  // Reset lại âm thanh về giây thứ 0 nếu người dùng nhấn liên tục
+  sound.currentTime = 0; 
+  
+  // Phát âm thanh
+  sound.play().catch(error => {
+    console.log("Trình duyệt chặn tự động phát âm thanh: ", error);
+  });
+}
   </script>
 </body>
+
 </html>
