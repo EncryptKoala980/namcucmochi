@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+
+  <style>
+    /* Giao diện thanh nhảy câu hỏi bên trái */
+    .quiz-container {
+      display: flex;
+      gap: 20px;
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .quiz-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* Thanh Nav bây giờ là một LAYER đè lên */
+    .nav-panel {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      background: rgba(30, 41, 59, 0.95);
+      /* Màu nền đậm có độ trong suốt nhẹ */
+      padding: 20px;
+      border-radius: 15px;
+
+      /* BIẾN THÀNH LAYER ĐÈ LÊN */
+      position: absolute;
+      top: 50px;
+      left: 0;
+      z-index: 999;
+      /* Đảm bảo luôn nằm trên cùng */
+
+      width: 280px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border: 1px solid #3b82f6;
+      backdrop-filter: blur(5px);
+      /* Làm mờ nhẹ nền phía dưới layer */
+    }
+
+    /* Khi đóng layer */
+    .nav-panel.collapsed {
+      display: none;
+    }
+
+    /* Nút đóng/mở layer */
+    .toggle-nav-btn {
+      background: #3b82f6;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 15px;
+      display: inline-block;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+    }
+
+    /* TRẠNG THÁI 1: Mặc định chưa làm - Màu Xám */
+    .nav-item {
+      aspect-ratio: 1/1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #334155;
+      /* Màu xám tro */
+      color: #94a3b8;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    /* Viền vàng cho câu đang xem */
+    .nav-item.active {
+      outline: 2px solid #fbbf24;
+      z-index: 1;
+    }
+
+    /* TRẠNG THÁI 2: Đã chọn đáp án (Đang thi) - Màu Xanh nước biển */
+    .nav-item.done {
+      background: #2563eb !important;
+      color: #ffffff !important;
+      border-color: #60a5fa !important;
+    }
+
+    /* TRẠNG THÁI 3: Đã nộp bài - Màu Xanh lá (Đúng) / Đỏ (Sai) */
+    .nav-item.correct {
+      background: #064e3b !important;
+      color: #a7f3d0 !important;
+      border-color: #10b981 !important;
+    }
+
+    .nav-item.wrong {
+      background: #7f1d1d !important;
+      color: #fecaca !important;
+      border-color: #ef4444 !important;
+    }
+
+    /* Đồng hồ đếm ngược */
+    #timer {
+      font-size: 24px;
+      font-weight: bold;
+      color: #ef4444;
+      text-align: center;
+      margin-bottom: 15px;
+      font-family: monospace;
+      /* Thêm dòng dưới đây để giữ chỗ cố định */
+      min-height: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Nút điều hướng Tiến/Lùi */
+    .nav-btns {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .nav-btns button {
+      flex: 1;
+      background: #475569;
+    }
+
+    /* Option dạng Checkbox giả */
+    .option.selected {
+      border-color: #3b82f6;
+      background: #1e3a8a;
+    }
+
+    /* Thanh tiến trình chạy ở phía trên cùng của Card */
+    .progress-container {
+      width: 100%;
+      background-color: #334155;
+      border-radius: 10px;
+      height: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(to right, #3b82f6, #60a5fa);
+      width: 0%;
+      /* Sẽ cập nhật bằng JS */
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 14px;
+      color: #94a3b8;
+      text-align: right;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .hover-word {
+      display: inline-block;
+      transition: all 0.2s ease-in-out;
+      transform-origin: center center;
+      margin: 0 1px;
+      letter-spacing: normal;
+      /* Khoảng cách chữ cái mặc định */
+    }
+
+    @media (hover: hover) {
+      .hover-word:hover {
+        transform: scale(1.2) translateY(-2px);
+        color: #60a5fa;
+        margin: 0 6px;
+        /* Giãn cách giữa các từ */
+
+        /* 🌟 ĐÂY LÀ DÒNG GIÃN CÁCH CÁC CHỮ CÁI BÊN TRONG TỪ 🌟 */
+        letter-spacing: 1.5px;
+
+        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+        cursor: default;
+      }
+    }
+
+    /* =========================================
+   BỔ SUNG: GIAO DIỆN FULL MÀN HÌNH CHO MÁY TÍNH (DESKTOP)
+   ========================================= */
+    /* Khi thẻ body có class 'is-desktop' (do JS gắn vào) */
+    .is-desktop .card {
+      max-width: 96%;
+      width: 100%;
+      min-height: 90vh;
+      padding: 40px 50px;
+    }
+
+    /* Khung chứa các đáp án */
+    .is-desktop #ans {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 30px;
+    }
+
+    .is-desktop .option {
+      margin: 0;
+      height: 100%;
+      padding: 24px;
+      font-size: 18px;
+    }
+
+    /* Thêm gợi ý phím tắt mờ nhạt ở góc phải của đáp án khi dùng máy tính */
+    .is-desktop .option:nth-child(1)::after {
+      content: "Phím 1";
+      float: right;
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 700;
+      margin-left: auto;
+    }
+
+    .is-desktop .option:nth-child(2)::after {
+      content: "Phím 2";
+      float: right;
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 700;
+      margin-left: auto;
+    }
+
+    .is-desktop .option:nth-child(3)::after {
+      content: "Phím 3";
+      float: right;
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 700;
+      margin-left: auto;
+    }
+
+    .is-desktop .option:nth-child(4)::after {
+      content: "Phím 4";
+      float: right;
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 700;
+      margin-left: auto;
+    }
+
+    /* Tùy chỉnh thêm khoảng cách của câu hỏi cho cân đối với khung to */
+    .is-desktop .q {
+      font-size: 24px;
+      margin-bottom: 30px;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      /* Nền web màu xanh đen cực đậm */
+      color: #f8fafc;
+      /* Màu chữ xám trắng */
+      margin: 0;
+      padding: 0;
+    }
+
+    .q {
+      font-size: 27px;
+      font-weight: 600;
+      line-height: 1.5;
+      margin: 20px 0 15px;
+      padding: 10px 0;
+      color: #f8fafc;
+      /* Chữ câu hỏi màu trắng/xám sáng */
+    }
+
+    /* Hiệu ứng phóng to và nổi bật khi di chuột vào đáp án (Chỉ hoạt động trên thiết bị có chuột) */
+    @media (hover: hover) {
+      .option:hover {
+        transform: scale(1.03);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        /* Bóng đổ đậm hơn cho dark mode */
+        border-color: #64748b;
+        /* Viền sáng lên một chút khi hover */
+        background: #334155;
+        /* Nền khối đáp án sáng lên nhẹ khi hover */
+      }
+    }
+
+    /* FULL MOBILE CARD */
+    .card {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      margin: auto;
+      background: #1e293b;
+      /* Nền khung làm bài xanh đen nhạt hơn nền web 1 xíu để tách biệt */
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    /* TITLE */
+    h2 {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 15px;
+      color: #f8fafc;
+    }
+
+    /* CHAPTER BUTTON */
+    .chaps {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    .chap {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      background: #334155;
+      /* Khối chương chưa chọn màu xám tro */
+      color: #94a3b8;
+      /* Chữ xám nhạt */
+      border: 2px solid #475569;
+      border-radius: 12px;
+      font-size: 23px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .chap.active {
+      background: #1e3a8a;
+      /* Xanh dương đậm khi active */
+      color: #60a5fa;
+      /* Chữ xanh dương sáng */
+      border: 2px solid #3b82f6;
+      /* Viền xanh dương dạ quang */
+    }
+
+    /* SLIDER */
+    .slider-wrap {
+      position: relative;
+      margin: 30px 0;
+    }
+
+    #slider {
+      width: 100%;
+      height: 10px;
+      border-radius: 10px;
+      appearance: none;
+      background: #334155;
+      /* Thanh trượt nền tối */
+    }
+
+    #slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #3b82f6;
+      /* Nút trượt xanh dương chói */
+      cursor: pointer;
+      margin-top: -6px;
+    }
+
+    /* VALUE FLOAT */
+    #val {
+      position: absolute;
+      top: -32px;
+      transform: translateX(-50%);
+      background: #3b82f6;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    /* OPTIONS */
+    .option {
+      background: #1e293b;
+      /* Nền khối đáp án đồng màu với Card */
+      color: #cbd5e1;
+      /* Chữ đáp án xám trắng */
+      padding: 18px 16px;
+      margin: 14px 0;
+      border-radius: 18px;
+      font-size: 26px;
+      line-height: 1.4;
+      min-height: 150px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: 0.15s;
+      border: 2px solid #334155;
+      /* Viền phân cách xám đen */
+    }
+
+    /* hiệu ứng bấm */
+    .option:active {
+      transform: scale(0.97);
+    }
+
+    .option.correct {
+      background: #064e3b;
+      /* Nền xanh lục sẫm khi đúng */
+      color: #a7f3d0;
+      /* Chữ xanh lợt khi đúng */
+      border-color: #10b981;
+      /* Viền xanh dạ quang */
+    }
+
+    .option.wrong {
+      background: #7f1d1d;
+      /* Nền đỏ bầm khi sai */
+      color: #fecaca;
+      /* Chữ hồng nhạt khi sai */
+      border-color: #ef4444;
+      /* Viền đỏ chót */
+    }
+
+    /* BUTTON */
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 16px;
+      background: #3b82f6;
+      /* Nút xanh dương dạ quang */
+      color: white;
+      font-size: 23px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* SAFE AREA (iphone) */
+    @supports(padding:max(0px)) {
+      .card {
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+      }
+    }
+
+    /* Bộ nút điều hướng cố định ở đáy màn hình */
+    .nav-btns-fixed {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      gap: 15px;
+      padding: 15px 20px;
+      z-index: 1000;
+      /* Luôn nằm trên cùng */
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .nav-btns-fixed button {
+      flex: 1;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 12px;
+      border: none;
+      background: #475569;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    /* Thêm khoảng trống ở dưới cùng của nội dung câu hỏi để không bị nút đè lên chữ cuối */
+    .quiz-main-content {
+      padding-bottom: 100px;
+    }
+
+    .exit-btn {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1001;
+      transition: 0.2s;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    }
+
+    .exit-btn:hover {
+      background: #dc2626;
+      transform: scale(1.05);
+    }
+
+    .exit-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card" id="app"></div>
+
+  <script>
+    document.addEventListener('keydown', function (event) {
+      if (!isExam && !isFinished) return;
+      const options = document.querySelectorAll('.option');
+      const isAnswered = document.querySelector('.option.correct') || document.querySelector('.option.wrong');
+
+      // Chuyển đổi phím bấm thành chữ thường để tránh lỗi Caps Lock
+      const key = event.key.toLowerCase();
+
+      // --- PHÍM TẮT MỚI GÁN THEO YÊU CẦU ---
+      if (key === 'q') {
+        toggleNav(); // Mở/Đóng Layer Nav
+      }
+      if (key === 'w') {
+        prevQ(); // Lùi câu
+      }
+      if (key === 'e') {
+        nextQ(); // Tiến câu
+      }
+
+      // --- CHỌN ĐÁP ÁN (1, 2, 3, 4) ---
+      if (options.length === 4 && !isAnswered && !isFinished) {
+        if (key === '1') options[0].click();
+        if (key === '2') options[1].click();
+        if (key === '3') options[2].click();
+        if (key === '4') options[3].click();
+      }
+
+      // Bấm Enter để bắt đầu hoặc làm lại
+      if (event.key === 'Enter') {
+        const btn = document.querySelector('button');
+        if (btn && (btn.innerText.includes('Bắt đầu') || btn.innerText.includes('Làm lại'))) {
+          btn.click();
+        }
+      }
+    });
+    // ===== DATA =====
+    const qBank ={
+  "c1": [
+    ["Câu 1. Thiết bị nào sau đây dùng để kết nối mạng?[cite: 2]", ["Ram", "Rom", "Router", "CPU"], 3],
+  ["Câu 2. Hệ thống nhớ của máy tính bao gồm:[cite: 2]", ["Bộ nhớ trong, Bộ nhớ ngoài", "Cache, Bộ nhớ ngoài", "Bộ nhớ ngoài, ROM", "Đĩa quang, Bộ nhớ trong"], 1],
+  ["Câu 3. Trong mạng máy tính, thuật ngữ Share có ý nghĩa gì?[cite: 2]", ["Chia sẻ tài nguyên", "Nhãn hiệu của một thiết bị kết nối mạng", "Thực hiện lệnh in trong mạng cục bộ", "Một phần mềm hỗ trợ sử dụng mạng cục bộ"], 1],
+  ["Câu 4. Bộ nhớ RAM và ROM là bộ nhớ gì?[cite: 2]", ["Primary memory", "Receive memory", "Secondary memory", "Random access memory."], 1],
+  ["Câu 5. Các thiết bị nào thông dụng nhất hiện nay dùng để cung cấp dữ liệu cho máy xử lý?[cite: 2]", ["Bàn phím (Keyboard), Chuột (Mouse), Máy in (Printer) .", "Máy quét ảnh (Scaner).", "Bàn phím (Keyboard), Chuột (Mouse) và Máy quét ảnh (Scaner).", "Máy quét ảnh (Scaner), Chuột (Mouse)"], 3],
+  ["Câu 6. Khái niệm hệ điều hành là gì ?[cite: 2]", ["Cung cấp và xử lý các phần cứng và phần mềm", "Nghiên cứu phương pháp, kỹ thuật xử lý thông tin bằng máy tính điện tử", "Nghiên cứu về công nghệ phần cứng và phần mềm", "Là một phần mềm chạy trên máy tính, dùng để điều hành, quản lý các thiết bị phần cứng và các tài nguyên phần mềm trên máy tính"], 4],
+  ["Câu 7. Cho biết cách xóa một tập tin hay thư mục mà không di chuyển vào Recycle Bin:?[cite: 2]", ["Chọn thư mục hay tâp tin cần xóa -> Delete", "Chọn thư mục hay tâp tin cần xóa -> Ctrl + Delete", "Chọn thư mục hay tâp tin cần xóa -> Alt + Delete", "Chọn thư mục hay tâp tin cần xóa -> Shift + Delete"], 4],
+  ["Câu 8. Danh sách các mục chọn trong thực đơn gọi là :[cite: 2]", ["Menu pad", "Menu options", "Menu bar", "Tất cả đều sai"], 2],
+  ["Câu 9. Công dụng của phím Print Screen là gì?[cite: 2]", ["In màn hình hiện hành ra máy in", "Không có công dụng gì khi sử dụng 1 mình nó.", "In văn bản hiện hành ra máy in", "Chụp màn hình hiện hành"], 4],
+  ["Câu 10. Nếu bạn muốn làm cho cửa sổ nhỏ hơn (không kín màn hình), bạn nên sử dụng nút nào?[cite: 2]", ["Maximum", "Minimum", "Restore down", "Close"], 3],
+  ["Câu 11. Trong soạn thảo Word, công dụng của tổ hợp phím Ctrl – S là:[cite: 2]", ["Tạo một văn bản mới", "Chức năng thay thế nội dung trong soạn thảo", "Định dạng chữ hoa", "Lưu nội dung tập tin văn bản vào đĩa"], 4],
+  ["Câu 12. Trong soạn thảo Word, để chèn các kí tự đặc biệt vào văn bản, ta thực hiện:[cite: 2]", ["View – Symbol", "Format – Symbol", "Tools – Symbol", "Insert – Symbol"], 4],
+  ["Câu 13. Trong soạn thảo Word, để kết thúc 1 đoạn (Paragraph) và muốn sang 1 đoạn mới :[cite: 2]", ["Bấm tổ hợp phím Ctrl – Enter", "Bấm phím Enter", "Bấm tổ hợp phím Shift – Enter", "Word tự động, không cần bấm phím"], 2],
+  ["Câu 14. Trong soạn thảo Word, tổ hợp phím nào cho phép đưa con trỏ về cuối văn bản :[cite: 2]", ["Shift + End", "Alt + End", "Ctrl + End", "Ctrl + Alt + End"], 3],
+  ["Câu 15. Trong soạn thảo Word, sử dụng phím nóng nào để chọn tất cả văn bản:[cite: 2]", ["Alt + A", "Ctrl + A", "Ctrl + Shift + A", "Câu 1 và 2."], 2],
+  ["Câu 16. Trong soạn thảo Word, để chọn một đoạn văn bản ta thực hiện:[cite: 2]", ["Click 1 lần trên đoạn", "Click 2 lần trên đoạn", "Click 3 lần trên đoạn", "Click 4 lần trên đoạn."], 3],
+  ["Câu 17. Trong soạn thảo Word, muốn đánh dấu lựa chọn một từ, ta thực hiện :[cite: 2]", ["Nháy đúp chuột vào từ cần chọn", "Bấm tổ hợp phím Ctrl – C", "Nháy chuột vào từ cần chọn", "Bấm phím Enter"], 1],
+  ["Câu 18. Trong soạn thảo Word, muốn tách một ô trong Table thành nhiều ô, ta thực hiện:[cite: 2]", ["Table – Merge Cells", "Table – Split Cells", "Tools – Split Cells", "Table – Cells"], 2],
+  ["Câu 19. Trong soạn thảo Word, thao tác nào sau đây sẽ kích hoạt lệnh Paste (Chọn nhiều đáp án)[cite: 2]", ["Tại thẻ Home, nhóm Clipboard, chọn Paste", "Bấm tổ hợp phím Ctrl + V.", "Chọn vào mục trong Office Clipboar", "Tất cả đều đúng"], 4],
+  ["Câu 20. Phần mềm nào có thể soạn thảo văn bản với nội dung và định dạng như sau:” Công cha như núi Thái Sơn Nghĩa mẹ như nước trong nguồn chảy ra. Một lòng thờ mẹ kính cha, Cho tròn chữ hiếu mới là đạo con.”[cite: 2]", ["Notepad", "Microsoft Word", "WordPad", "Tất cả đều đúng"], 4],
+  ["Câu 21. Trong bảng tính Excel, giá trị trả về của công thức =LEN(“TRUNG TAM TIN HOC”) là:[cite: 2]", ["15", "16", "17", "18"], 3],
+  ["Câu 22. Trong bảng tính Excel, cho các giá trị như sau: ô A4 = 4, ô A2 = 5, ô A3 = 6, ô A7 = 7 tại vị trí ô B2 lập công thức B2 = Sum(A4,A2,Count(A3,A4)) cho biết kết quả ô B2 sau khi Enter:[cite: 2]", ["10", "9", "11", "Lỗi"], 3],
+  ["Câu 23. Trong bảng tính Excel, ô A1 chứa nội dung “TTTH ĐHKHTN”. Khi thực hiện công thức = LEN(A1)thì giá trị trả về kết quả:[cite: 2]", ["6", "11", "5", "0"], 2],
+  ["Câu 24. Trong bảng tính Excel, ô A1 chứa giá trị 7.5. Ta lập công thức tại ô B1 có nội dung như sau=IF(A1>=5, “Trung Bình”, IF(A1>=7, “Khá”, IF(A1>=8, “Giỏi”, “Xuất sắc”))) khi đó kết quả nhận được là:[cite: 2]", ["Giỏi.", "Xuất sắc.", "Trung Bình", "Khá."], 3],
+  ["Câu 25. Trong bảng tính Excel, hàm nào dùng để tìm kiếm:[cite: 2]", ["Vlookup", "IF", "Left", "Sum"], 1],
+  ["Câu 26. Trong bảng tính Excel, để lưu tập tin đang mở dưới một tên khác, ta chọn:[cite: 2]", ["File / Save As", "File / Save", "File / New", "Edit / Replace"], 1],
+  ["Câu 27. Trong bảng tính Excel, hàm Today() trả về:[cite: 2]", ["Số ngày trong tháng", "Số tháng trong năm", "Ngày hiện hành của hệ thống", "Số giờ trong ngày"], 3],
+  ["Câu 28. Trong bảng tính Excel, các dạng địa chỉ sau đây, địa chỉ nào là địa chỉ tuyệt đối:[cite: 2]", ["B$1$$10$D", "B$1", "$B1:$D10", "$B$1:$D$10"], 4],
+  ["Câu 29. Trong bảng tính Excel, Ô C2 chứa hạng của học sinh. Công thức nào tính học bổng theo điều kiện: Nếu xếp hạng từ hạng một đến hạng ba thì được học bổng là 200000, còn lại thì để trống[cite: 2]", ["=IF(C2>=3, 200000, 0)", "=IF(C2<=3, 200000, “”)", "=IF(C2<=3, 0, 200000)", "=IF(C2<3, 200000, “”)"], 2],
+  ["Câu 30. Trong bảng tính Excel, tại ô A2 có giá trị số 25; Tại ô B2 gõ vào công thức =SQRT(A2) thì nhận được kết quả:[cite: 2]", ["0", "5", "#VALUE!", "#NAME!"], 2],
+  ["Câu 31. Trong Powerpoint để tạo mới 1 Slide ta sử dụng?[cite: 2]", ["Home -> Slides -> New Slide", "Insert -> New Slide", "Design -> New Slide", "View -> New Slide"], 1],
+  ["Câu 32. Trong Powerpoint muốn đánh số trang cho từng Slide ta dùng lệnh nào sau đây:[cite: 2]", ["Insert\\ Bullets and Numbering", "Insert \\ Text \\ Slide Number.", "Format \\ Bullets and Number.", "Các câu trên đều sai"], 2],
+  ["Câu 33. Khi thiết kế các Slide, sử dụng Home -> Slides -> New Slide có ý nghĩa gì ?[cite: 2]", ["Chèn thêm một slide mới vào ngay trước slide hiện hành", "Chèn thêm một slide mới vào ngay sau slide hiện hành", "Chèn thêm một slide mới vào ngay trước slide đầu tiên", "Chèn thêm một slide mới vào ngay sau slide cuối cùng"], 2],
+  ["Câu 34. Để trình chiếu một Slide hiện hành, bạn sử dụng lựa chọn nào? (Chọn nhiều lựa chọn)[cite: 2]", ["Nhấn tổ hợp phím Shift+F5", "Nhấn tổ hợp phím Ctrl+Shift+F5", "Slide Show -> Start Slide Show -> From Current Slide", "Nhấn phím F5"], 1],
+  ["Câu 35. Để tạo hiệu ứng cho 1 Slide, bạn sử dụng lựa chọn nào?[cite: 2]", ["Animations -> Add Animation", "Animations -> Animation", "Transitions -> Effect Options", "Transitions -> Transition to this Slide"], 4],
+  ["Câu 36. Khi thiết kế Slide với PowerPoint, muốn thay đổi mẫu nền thiết kế của Slide, ta thực hiện:[cite: 2]", ["Design ->Themes …", "Design ->Background…", "Insert -> Slide Design …", "Slide Show -> Themes…"], 1],
+  ["Câu 37. Chức năng công cụ nào sau đây trong nhóm dùng để xem trình chiếu slide đang hiển thị thiết kế (thanh công cụ zoom góc dưới bên phải của giao diện thiết kế):[cite: 2]", ["Normal", "Slide Sorter", "Slide show", "Reading view"], 3],
+  ["Câu 38. Chức năng Animations/ Timing/ Delay dùng để:[cite: 2]", ["Thiết lập thời gian chờ trước khi slide được trình chiếu", "Thiết lập thời gian chờ trước khi hiệu ứng bắt đầu", "Thiết lập thời gian hoạt động cho tất cả các hiệu ứng", "Tất cả đều đúng"], 2],
+  ["Câu 39. Để vẽ đồ thị trong Slide ta chọn:[cite: 2]", ["File/ Chart", "Insert/ Chart", "View/ Chart", "Design/ Chart"], 2],
+  ["Câu 40. Để hủy bỏ thao tác vừa thực hiện ta nhấn tổ hợp phím:[cite: 2]", ["Ctrl + X", "Ctrl + Z", "Ctrl + C", "Ctrl + V"], 2],
+  ["Câu 41. Khi một dòng chủ đề trong thư ta nhận được bắt đầu bằng chữ RE:; thì thông thường thư là:[cite: 2]", ["Thư rác, thư quảng cáo", "Thư mới", "Thư của nhà cung cấp dịch vụ E-mail mà ta đang sử dụng", "Thư trả lời cho thư mà ta đã gởi trước đó"], 4],
+  ["Câu 42. Website Yahoo.com hoặc gmail.com cho phép người sử dụng thực hiện[cite: 2]", ["Nhận thư", "Gởi thư", "Tạo hộp thư", "3 lựa chọn trên đúng"], 4],
+  ["Câu 43. Chức năng Bookmark của trình duyệt web dùng để:[cite: 2]", ["Lưu trang web về máy tính", "Đánh dấu trang web trên trình duyệt", "Đặt làm trang chủ", "Tất cả đều đúng"], 2],
+  ["Câu 44. Nếu không kết nối được mạng, bạn vẫn có thể thực hiện được hoạt động nào sau đây:[cite: 2]", ["Gửi email", "Viết thư", "Xem 1 trang web", "In trên may in sử dụng chung cài đặt ở máy khác"], 2],
+  ["Câu 45. Khi muốn tìm kiếm thông tin trên mạng Internet, chúng ta cần[cite: 2]", ["Tìm kiếm trên các Websites tìm kiếm chuyên dụng", "Tùy vào nội dung tìm kiếm mà kết nối đến các Websites cụ thể.", "Tìm kiếm ở bất kỳ một Websites nào", "Tìm trong các sách danh bạ internet"], 1],
+  ["Câu 46: Bộ nhớ truy nhập trực tiếp RAM được viết tắt từ, bạn sử dụng lựa chọn nào?[cite: 2]", ["Read Access Memory.", "Random Access Memory.", "Rewrite Access Memory.", "Cả 3 câu đều đúng."], 2],
+  ["Câu 47: Khả năng xử lý của máy tính phụ thuộc vào … ban sử dụng lựa chọn nào?[cite: 2]", ["Tốc độ CPU, dung lượng bộ nhớ RAM, dung lượng và tốc độ ổ cứng.", "Yếu tố đa nhiệm", "Hiện tượng phân mảnh ổ đĩa.", "Cả 3 phần trên đều đúng."], 4],
+  ["Câu 48: Máy tính là gi?[cite: 2]", ["Là công cụ chỉ dùng để tính toán các phép tính thông thường.", "Là công cụ cho phép xử lý thông tin một cách tự động.", "Là công cụ cho phép xử lý thông tin một cách thủ công.", "Là công cụ không dùng để tính toán."], 2],
+  ["Câu 49: Trình tự xử lý thông tin của máy tính điện tử[cite: 2]", ["Màn hình -> CPU -> Đĩa cứng", "Đĩa cứng -> Màn hình -. CPU", "Nhập thông tin -> Xử lý thông tin -> Xuất thông tin", "Màn hình -> Máy in -> CPU"], 3],
+  ["Câu 50: Thiết bị xuất của máy tính gồm?[cite: 2]", ["Bàn phím, màn hình, chuột", "Màn hình, máy in.", "Chuột, màn hình, CPU", "Bàn phím, màn hình, loa"], 2],
+  ["Câu 51: Trong ứng dụng windows Explorer, để chọn nhiều tập tin hay thư mục không liên tục ta thực hiện thao tác kết hợp phím … với click chuột.[cite: 2]", ["Shift", "Alt", "Tab", "Ctrl"], 4],
+  ["Câu 52: Phím tắt để sao chép một đối tượng vào ClipBoard là:[cite: 2]", ["Ctrl + X", "Ctrl + C", "Ctrl + V", "Ctrl + Z"], 2],
+  ["Câu 53: Hộp điều khiển việc phóng to, thu nhỏ, đóng cửa sổ gọi là:[cite: 2]", ["Dialog box", "Control box", "List box", "Text box"], 2],
+  ["Câu 54: Để đảm bảo an toàn dữ liệu ta chọn cách nào?[cite: 2]", ["Đặt thuộc tính hidden.", "Copy nhiều nơi trên ổ đĩa máy tính", "Đặt thuộc tính Read only", "Sao lưu dự phòng"], 4],
+  ["Câu 55: Trong hệ điều hành windows chức năng Disk Defragment gọi là?[cite: 2]", ["Chống phân mảnh ổ cứng", "Làm giảm dung lượng ổ cứng", "Sao lưu dữ liệu ổ cứng", "Lau chùi tập tin rác ổ cứng"], 1],
+  ["Câu 56: Trong soạn thảo word, công dụng của tổ hợp phím Ctrl + O dùng để[cite: 2]", ["Tạo một văn bản mới", "Đóng văn bản đang làm việc", "Mở 1 văn bản đã có trên máy tính", "Lưu văn bản đang làm việc"], 3],
+  ["Câu 57: Khi làm việc với văn bản word, để bật chế độ nhập ký tự Subscript khi tạo ký tự hóa học H2O. Ta sử dụng chức năng nào: (Có thể chọn nhiều câu đúng).[cite: 2]", ["Nhấn tổ hợp phím Ctrl + =", "Nhấn tổ hợp phím Ctrl + Shift + +", "Click chọn biểu tượng Superscipt trong nhóm Font", "Click chọn biểu tượng Subscript trong nhóm Font"], 4],
+  ["Câu 58: Trong word, biểu tượng cây chổi có chức năng gì?[cite: 2]", ["Sao chép nội dung văn bản", "Canh lề văn bản", "Sao chép định dạng", "Mở văn bản đã có"], 3],
+  ["Câu 59: Người đọc biết tập tin đang mở là phiên bản cuối cùng và chỉ cho phép đọc, bạn chọn?[cite: 2]", ["File -> info -> Protect Document -> Restrict Editing", "Review ->Restrict Editing -> Editing restrictions -> No changes (Read only)", "File -> info -> Protect Document -> Mark as Final", "File -> info -> Protect Document -> Encrypt as Password"], 3],
+  ["Câu 60: Thuộc tính phần mềm microsoft word 2010 có phần mở rộng là gì? ( Cho phép chọn nhiều)[cite: 2]", [".doc", ".docx", ".dot", ".txt"], 2],
+  ["Câu 61: Câu nào sau đây sai khi nhập dữ liệu vào bảng tính Excel thì:[cite: 2]", ["Dữ liệu kiểu số sẽ mặc nhiên canh thẳng lề trái", "Dữ liệu kiểu ký tự sẽ mặc nhiên canh thẳng lề trái", "Dữ liệu kiểu thời gian sẽ mặc nhiên canh thẳng lề phải", "Dữ liệu kiểu ngày tháng sẽ mặc nhiên canh thẳng lề phải."], 1],
+  ["Câu 62: Biểu thức sau = AND(5>4,6<9,2<1,10>7,OR(2<1,3>2))[cite: 2]", ["True", "False", "#Name?", "#Value!"], 2],
+  ["Câu 63: Địa chỉ B$3 là địa chỉ:[cite: 2]", ["Tương đối", "Tuyệt đối", "Hỗn hợp", "Biểu diễn sai"], 3],
+  ["Câu 64: Trong powerpoint in ấn ta sử dụng chức năng[cite: 2]", ["Home -> Print", "Insert -> Print", "Design -> Print", "File -> Print"], 4],
+  ["Câu 65: Để tạo một slide chủ chứa các định dạng chung của toàn bộ các slide trong bài trình diễn. Để thực hiện điều này người dùng phải chọn:[cite: 2]", ["View -> Master Slide", "Insert -> Slide Master", "View -> Slide Master", "Insert -> Master Slide"], 3],
+  ["Câu 66: Trong ứng dụng PowerPoint chức năng hyperlink dùng để tạo liên kết[cite: 2]", ["Slide trong cùng 1 presentation", "Slide không cùng 1 presentation", "Địa chỉ email, trang web, tập tin.", "Các lựa chọn trên đều đúng."], 4],
+  ["Câu 67: Trong PowerPoint 2010 muốn chèn một đoạn nhạc vào Slide, ta dùng lệnh nào sau đây?[cite: 2]", ["Insert -> Audio", "Insert -> Component", "Insert -> Diagram", "Insert -> Comment"], 1],
+  ["Câu 68: Tại một slide trong powerpoint ta dùng tổ hợp nào sau đây để xóa slide đó?[cite: 2]", ["ALT + I + D", "ALT + E + F", "ALT + E + D", "ALT + W + P"], 3],
+  ["Câu 69: Hai người chat với nhau qua mạng Yahoo Messenger trong cùng một phòng nét?[cite: 2]", ["Dữ liệu truyền từ máy đang chat lên máy chủ phòng nét và quay về máy chat bên kia.", "Dữ liệu đi trực tiếp giữa hai máy đang trong phòng chat.", "Dữ liệu truyền về máy chủ Yahoo và quay về máy bên kia.", "Dữ liệu truyền về máy chủ internet Việt Nam và quay về máy đang chat."], 3],
+  ["Câu 70: Tên miền trong địa chỉ website có .edu cho biết Website đó thuộc về?[cite: 2]", ["Lĩnh vực chính phủ", "Lĩnh vực giáo dục", "Lĩnh vực cung cấp thông tin", "Thuộc về các tổ chức khác"], 2],
+  ["Câu 71: Website là gì?[cite: 2]", ["Là một ngôn ngữ siêu văn bản.", "Là hình thức trao đổi thông tin dưới dạng thư thông qua hệ thống mạng máy tính.", "Là các file được tạo ra bởi Word, Excel, PowerPoint … rồi chuyển sang html.", "Tất cả đều sai."], 4],
+  ["Câu 72: Phần mềm nào sau đây không phải trình duyệt WEB?[cite: 2]", ["Microsoft Internet Explorer", "Mozilla Firefox", "Netcape", "Unikey"], 4],
+  ["Câu 73: Dịch vụ lưu trữ đám mây của Microsoft là gì?[cite: 2]", ["Google Driver", "Mediafire", "OneDrive", "Cả 3 câu hỏi trên đều đúng."], 3],
+  ["Câu 1: Việc tải file dữ liệu từ internet bị chậm là do nguyên nhân, bạn sử dụng lựa chọn nào?[cite: 2]", ["File có dung lượng lớn", "Server cung cấp dịch vụ internet bị quá tải", "Đường truyền internet tốc độ thấp", "Cả 3 ý trên đều đúng"], 4],
+  ["Câu 2: Để thực hiện việc chèn bảng biểu vào slide ta phải, bạn sử dụng lựa chọn nào?[cite: 2]", ["Insert \\Tables \\ Insert", "Insert \\Tables \\ Table \\ Insert Table", "Insert \\Tables \\ Table \\ Table", "Insert \\Tables \\ Table Insert"], 2],
+  ["Câu 3: CPU là viết tắt của cụm từ nào, bạn sử dụng lựa chọn nào?[cite: 2]", ["Common Processing Unit", "Control Processing Unit", "Case Processing Unit", "Central Processing Unit"], 4],
+  ["Câu 4: Phần mềm nào là phần mềm ứng dụng?[cite: 2]", ["Microsoft Powerpoint", "Microsoft Word.", "Microsoft Excel.", "Cả 3 ý trên."], 4],
+  ["Câu 5: Trong bảng tính Excel, tại ô A1 chứa chuỗi TINHOC. Ta gõ công thức tại ô B1 là: =LEFT(A1,3) thì nhận được kết quả:[cite: 2]", ["TIN", "HOC", "INH", "NHO"], 1],
+  ["Câu 6: Để soạn một Email, bạn sử dụng lựa chọn nào? (Chọn nhiều lựa chọn)[cite: 2]", ["Kết nối Internet, vào hộp mail và soạn mail", "Không cần kết nối Internet vẫn soạn được", "Soạn sẵn văn bản trên Word rồi copy, vào hộp mail, soạn thư paste vào.", "Cả 3 phần đều sai"], 1],
+  ["Câu 7: Để truy cập Internet, người ta dùng chương trình nào sau đây, bạn sử dụng lựa chọn nào?[cite: 2]", ["Microsoft Excel", "Microsoft Word", "Internet Explorer", "Wordpad"], 3],
+  ["Câu 8: Các phần mềm dùng để nén tập tin, bạn sử dụng lựa chọn nào?[cite: 2]", ["Winzip, Winrar, Total Commander", "Winzip, Winword, Window Explorer", "Winzip, Winword, Excel", "Winzip, Window, Total Commander"], 1],
+  ["Câu 9: Trong soạn thảo Word, để dãn khoảng cách giữa các dòng là 1.5 line trong một đoạn, bạn sử dụng lựa chọn: (Chọn nhiều đáp án)[cite: 2]", ["Format \\ Paragraph \\ line spacing", "Home \\ Paragraph \\ Line and Paragraph Spacing \\ 1.5", "Nhấn Ctrl+Shift+5 tại dòng đó", "Nhấn Ctrl + 5 tại dòng đó"], 2],
+  ["Câu 10: Để tô màu nền cho Powerpoint 2010 ta chọn những lệnh nào:?[cite: 2]", ["Insert \\ Background \\ Background Style", "Layout \\ Background \\ Background Style", "Home \\ Background \\ Background Style", "Design \\ Background \\ Background Style"], 4],
+  ["Câu 11: Trong bảng tính Excel, ta gõ công thức tại ô B1 là: =MAX(12,3,9,15,8) thì nhận được kết quả:[cite: 2]", ["5", "15", "47", "3"], 2],
+  ["Câu 12: Trong soạn thảo Word, chèn một Textbox trong văn bản, bạn sử dụng lựa chọn: (Chọn nhiều đáp án)[cite: 2]", ["Home \\ Font \\ Text Box", "Insert \\ Text \\ Text Box", "Insert \\ Illustrations \\ Shapes \\ Text Box", "Home \\ Paragraph \\ Text Box"], 2],
+  ["Câu 13: Bộ nhớ truy nhập trực tiếp RAM được viết tắt từ, bạn sử dụng lựa chọn nào?[cite: 2]", ["Read Access Memory", "Random Access Memory", "Rewrite Access Memory.", "Cả 3 câu đều đúng"], 2],
+  ["Câu 14: Trong bảng tính Excel, cho biết phím tắt để cố định địa chỉ ô trong công thức:[cite: 2]", ["F4", "F6", "F2", "F8"], 1],
+  ["Câu 15: Muốn sao lưu một trang web vào máy tính, bạn sử dụng lựa chọn nào?[cite: 2]", ["File \\ Save As", "Chuột phải tại trang Web \\ chọn Save", "File \\ Save", "Edit \\ Select \\ chọn Copy \\ Mở một chương trình soạn thảo bất kỳ \\ chọn Paste"], 1],
+  ["Câu 16: Trong Powerpoint muốn thêm 1 slide ta bấm tổ hợp phím nào:?[cite: 2]", ["Ctrl + P", "Ctrl + L", "Ctrl + M", "Ctrl + N"], 3],
+  ["Câu 17: Để tạo hiệu ứng cho 1 Slide, bạn sử dụng lựa chọn nào?[cite: 2]", ["Transitions \\ Transition to this Slide", "Animations \\ Animation", "Transitions \\ Effect Options", "Animations \\ Add Animation"], 4],
+  ["Câu 18: Trong soạn thảo Word, để chèn một chữ nghệ thuật vào văn bản, bạn sử dụng lựa chọn:[cite: 2]", ["Insert \\ Text \\ WordArt", "Insert \\ Text \\ QuickPart", "Insert \\ Illustrations \\ ClipArt", "Insert \\ Illustrations \\ SmartArt"], 1],
+  ["Câu 19: Các bộ mã dùng để gõ dấu tiếng Việt, bạn sử dụng lựa chọn nào?[cite: 2]", ["Unicode, X UTF-8, Vietware X", "Unicode, TCVN, VIQR", "Unicode, TCVN, X UTF-8", "Unicode, TCVN, Vietware F"], 2],
+  ["Câu 20: Theo bạn, các phần mềm sau thuộc nhóm phần mềm nào: MS Word, MS Excel, MS Access, MS PowerPoint, MS , bạn sử dụng lựa chọn nào?[cite: 2]", ["Nhóm phần mềm hệ điều hành", "Nhóm phần mềm ứng dụng", "Nhóm phần mềm CSDL", "Nhóm phần mềm hệ thống"], 2],
+  ["Câu 21: Trong soạn thảo Word, cách chuyển đổi chữ hoa sang chữ thường và ngược lại, bạn sử dụng: (Chọn nhiều đáp án)[cite: 2]", ["Nhấn phím F3", "Nhấn phím shift+F3", "Home \\ Font \\ Text Effect \\ Change Case", "Home \\ Font \\ Change Case"], 2],
+  ["Câu 22: Trong bảng tính Excel, ta gõ công thức tại ô B1 là: =AVERAGE(3,4,5,6) thì nhận được kết quả:[cite: 2]", ["3", "4.5", "18", "6"], 2],
+  ["Câu 23: Thiết bị nhập chuẩn bao gồm gì, bạn sử dụng lựa chọn nào?[cite: 2]", ["Màn hình, máy in", "Bàn phím, máy in", "Chuột, bàn phím", "Máy in, chuột"], 3],
+  ["Câu 24: Cho biết cách sử dụng bàn phím ảo trong hệ điều hành Windows:?[cite: 2]", ["Vào Computer \\ Ổ đĩa C \\ Program Files \\ Unikey \\ Unikey.exe", "Vào Start \\ Run \\ gõ lệnh OKN", "Vào Computer \\ Ô đĩa C \\ Program Files \\ Microsoft Office\\Office14 \\Winword.exe", "Vào Start \\ Run \\ gõ lệnh OSK"], 4],
+  ["Câu 25: Để tắt máy tính ta chọn chức năng nào sau đây:?[cite: 2]", ["Log off", "Restart", "Sleep", "Shutdown"], 4],
+  ["Câu 26: Muốn di chuyển một tập tin trong Window Explorer ta dùng phím tắt, bạn sử dụng lựa chọn nào?[cite: 2]", ["Chọn tập tin muốn di chuyển \\ nhấn Ctrl + X \\ Chọn nơi di chuyển đến \\ nhấn Ctrl +V", "Chọn tập tin muốn di chuyển \\ nhấn Ctrl + Z \\ Chọn nơi di chuyển đến \\ nhấn Ctrl +V", "Chọn tập tin muốn di chuyển \\ nhấn Ctrl + C \\ Chọn nơi di chuyển đến \\ nhấn Ctrl +V", "Chọn tập tin muốn di chuyển \\ nhấn Ctrl + I \\ Chọn nơi di chuyển đến \\ nhấn Ctrl +V"], 1],
+  ["Câu 27: Để tạo hiệu ứng chuyển cảnh giữa các slide (hiệu ứng chuyển trang slide ) trong powerpoint 2010 ta làm như thế nào:?[cite: 2]", ["Animations \\ Transition to this slide \\ Chọn 1 hiệu ứng bất kỳ", "Design \\ Transition to this slide \\ Chọn 1 hiệu ứng bất kỳ", "Transitions \\ Transition to this slide \\ Chọn 1 hiệu ứng bất kỳ", "Insert \\ Transition to this slide \\ Chọn 1 hiệu ứng bất kỳ"], 3],
+  ["Câu 28: Một số Virus không hợp lệ, bạn sử dụng lựa chọn nào? (Chọn nhiều lựa chọn)[cite: 2]", ["Spyware", "Fishing", "Trojan horse", "Warning V"], 4],
+  ["Câu 29: Trong soạn thảo Word, để tạo một bảng biểu, bạn thực hiện:[cite: 2]", ["Insert \\ Text \\ Table \\ Insert Table", "Insert \\ Text \\ Insert Table", "Insert \\ Tables \\ Table \\ Insert Table", "Format \\ Tables \\ Table \\ Insert Table"], 3],
+  ["Câu 30: Trong Word, để thay đổi khoảng cách giữa hai đoạn văn bản, ta thiết lập tại đâu?[cite: 2]", ["Ô Before và After trong thẻ Page Layout", "Mục Line Spacing trong thẻ Page Layout", "Ô Left và Right trong thẻ Page Layout", "Ô Above và Below trong thẻ Page Layout"], 1],
+  ["Câu 31: Trong Word, để đánh dấu 1 vị trí (bookmark), bạn sử dụng lựa chọn nào?[cite: 2]", ["Thẻ Insert \\ chọn Bookmark \\ chọn add.", "Thẻ Page Layout \\ Bookmark \\ nhập tên", "Thẻ Page Layout \\ chọn Bookmark \\ nhập tên \\ chọn add.", "Thẻ Insert \\ chọn Bookmark \\ nhập tên \\ chọn Add"], 4],
+  ["Câu 32: Trong Excel, muốn tính toán lại toàn bộ các công thức trong 1 sheet, bạn sử dụng lựa chọn nào?[cite: 2]", ["Nhấn F9", "Formulas \\ nhóm Calculation \\Calculate Sheet", "Formulas \\ nhóm Calculation \\Calculate Now", "Nhấn Ctrl+F9"], 1],
+  ["Câu 33: Trong Word, để thêm nền mờ (Watermark), bạn sử dụng lựa chọn nào?[cite: 2]", ["Thẻ Page Layout\\Watermark", "Thẻ Home\\Watermark", "Thẻ Insert\\Watermark", "Cả 3 lựa chọn trên đều sai"], 1],
+  ["Câu 34: Để lưu các trang chiếu thành các tệp dạng jpeg bạn sử dụng lựa chọn nào?[cite: 2]", ["Vào File, chọn Save As, chọn File Interchange Format", "Vào File, chọn Save As, chọn Graphics Interchange Format", "Vào File, chọn Save As, chọn Powerpoint Picture Presentation", "Cả 3 lựa chọn trên đều sai"], 1],
+  ["Câu 35: Trong Word, để chỉnh sửa liên kết (Hyperlink), bạn sử dụng lựa chọn nào?[cite: 2]", ["Right click vào liên kết \\ chọn Edit Hyperlink", "Right click vào liên kết \\ chọn Open Hyperlink", "Chọn Insert \\ chọn Hyperlink", "Cả 3 lựa chọn trên đều sai"], 1],
+  ["Câu 36: Trong Excel, khi viết sai tên hàm trong tính toán, chương trình thông báo lỗi gì?[cite: 2]", ["#NAME!", "#DIV/0!", "#N/A!", "#VALUE!"], 1],
+  ["Câu 37: Để thay đổi hướng viết trong một ô thuộc Table (Winword), bạn sử dụng lựa chọn nào?[cite: 2]", ["Thẻ Design \\ chọn Text Direction", "Thẻ Layout \\ chọn Text Direction \\ chọn 1 kiểu", "Thẻ Page Layout \\ chọn Text Direction \\ chọn 1 kiểu", "Thẻ Home \\ chọn Text Direction"], 2],
+  ["Câu 38: Cài đặt tự động chuyển trang slide khi trình chiếu, bạn sử dụng lựa chọn nào?[cite: 2]", ["Thẻ Design, nhóm Timing", "Thẻ Transitions, nhóm Transition, On mouse click", "Thẻ Transitions, nhóm Timing, chọn After", "Cả 3 lựa chọn trên đều sai"], 3],
+  ["Câu 39: Chức năng của hàm COUNTIFS trong Excel là:[cite: 2]", ["Hàm đếm số lượng các ô trong vùng dữ liệu thỏa điều kiện của vùng tiêu chuẩn", "Hàm đếm số lượng các ô trong một vùng thỏa nhiều điều kiện cho trước", "Hàm tính tổng các ô trong một vùng thỏa nhiều điều kiện cho trước", "Hàm tính trung bình cộng các ô trong một vùng thỏa nhiều điều kiện cho trước"], 2],
+  ["Câu 40: Để luôn chỉ chọn in một vùng nào đó trong bảng tính Excel, bạn sử dụng lựa chọn nào?[cite: 2]", ["Bôi đen vùng cần in \\ vào File\\Print Area \\ chọn Set Print Area.", "Vào File\\Print \\chọn OK.", "Cả 2 cách trên đều đúng.", "Cả 2 cách trên đều sai."], 1],
+  ["Câu 41: Để xóa hoàn toàn phần chú thích trong biểu đồ, bạn sử dụng lựa chọn nào? (Chọn nhiều trả lời)[cite: 2]", ["Chọn biểu đồ, chọn chú thích, nhấn Delete", "Chuột phải vào chú thích trong biểu đồ, chọn Remove", "Chọn biểu đồ, vào Charts Tool \\ thẻ Layout \\Legend \\ chọn None", "Cả 3 lựa chọn trên đều đúng"], 4],
+  ["Câu 42: Giá trị tại ô F4 chứa điểm trung bình là 8. Công thức tại ô H4: =IF(F4=10,”Xuất sắc”,IF(F4>8,”Giỏi”,IF(F4>6.5,”Khá”,”Trung bình”))). Kết quả trả về tại ô H4 là:[cite: 2]", ["Khá", "Trung bình", "Giỏi", "Xuất sắc"], 1],
+  ["Câu 43: Trong bảng tính Excel sau: Kết quả như trong hình có thể là kết quả của thao tác thống kê bằng:[cite: 2]", ["Consolidate", "PivotTable", "Data Table", "SubTotal"], 2],
+  ["Câu 44: Cách chuyển trang slide thủ công khi trình chiếu, bạn sử dụng lựa chọn nào?[cite: 2]", ["Thẻ Transitions, nhóm Timing, chọn After", "Thẻ Transitions, nhóm Transition, On mouse click", "Thẻ Design, nhóm Timing", "Cả 3 lựa chọn trên đều sai"], 2],
+  ["Câu 45: Trong Excel, hàm gì được dùng để tính tổng các giá trị trong một vùng nào đó khi các giá trị trong vùng tương ứng thỏa mãn điều kiện cho trước?[cite: 2]", ["SUMIF", "COUNT", "COUNTIF", "SUM"], 1],
+  ["Câu 46: Trong Excel, để làm ẩn một sheet sau đó có thể cho hiện lại bằng lệnh Unhide, bạn sử dụng lựa chọn nào? (Chọn nhiều trả lời)[cite: 2]", ["Chọn toàn bộ bảng tính, chuột phải tại 1 dòng bất kỳ \\ chọn Hide", "Chọn toàn bộ bảng tính, vào Home\\Format\\Hide & Unhide \\Hide Columns", "Vào Home\\Format\\Hide & Unhide \\ Hide Sheet", "Chuột phải vào thẻ sheet cần làm ẩn \\chọn Hide"], 4],
+  ["Câu 47: Để thiết lập thời gian slide tự động chuyển sau 3 giây, bạn sử dụng lựa chọn nào?[cite: 2]", ["Thẻ Transitions", "Thẻ View", "Thẻ Animations", "Cả 3 lựa chọn trên đều sai"], 1],
+  ["Câu 48: Trong Word, để tạo liên kết cho 1 chuỗi văn bản đến 1 trang web, sau khi chọn chuỗi văn bản, vào Insert\\Hyperlink , bạn sử dụng lựa chọn nào?[cite: 2]", ["Exiting file or Web page", "Place in this document", "Create New Document", "Cả 3 lựa chọn trên đều sai"], 1],
+  ["Câu 49: Trong Word, để ghép các ô đang chọn trong 1 bảng thành 1 ô, bạn sử dụng lựa chọn nào?[cite: 2]", ["Thẻ Layout \\ Margin Cells", "Thẻ Layout \\ Merge Cells", "Thẻ Layout \\ Split Table", "Thẻ Layout \\ Split Cells"], 2],
+  ["Câu 50: Chế độ hiển thị Slide Sorter được cung cấp trong thẻ nào của PowerPoint?[cite: 2]", ["Insert", "Edit", "File", "View"], 4],
+  ["Câu 51: Để đưa nội dung từ một ứng dụng khác vào vào trang chiếu, bạn sử dụng lựa chọn nào?[cite: 2]", ["Thẻ Insert, chọn Object", "Thẻ Insert, chọn TextBox", "Thẻ Insert, chọn Screenshot", "Cả 3 lựa chọn trên đều sai"], 1],
+  ["Câu 52: Để xóa tất cả ghi chú trong tập tin Powerpoint, sau khi chọn đối tượng đầu tiên có ghi chú, bạn sử dụng lựa chọn nào?[cite: 2]", ["Delete", "Delete all Markup in this Presentation", "Delete all Markup on the Current Slide", "Cả 3 lựa chọn trên đều sai"], 2],
+  ["Câu 53: Trong Word, để lùi (thụt) lề trái của 1 đoạn vào 0.5 inch bạn sử dụng lựa chọn nào?[cite: 2]", ["Chọn đoạn \\ kéo biểu tượng Left Indent trên ruler vào 0.5”", "Thẻ Home \\ chọn đoạn \\ mở hộp thoại Paragraph \\ tại Left nhập 0.5", "Chọn đoạn \\ Page Layout\\nhóm Paragraph \\ tại Left nhập 0.5", "Cả 3 lựa chọn trên đều đúng"], 4],
+  ["Câu 54: Tab Layout trong Chart Tools của Excel chứa các thông tin nào?[cite: 2]", ["Tiêu đề trục hoành, tiêu đề trục tung", "Chú thích", "Tiêu đề chính cho biểu đồ", "Cả 3 lựa chọn trên đều đúng"], 4],
+  ["Câu 55: Trong Word, để chèn 1 auto text đã tạo, bạn sử dụng lựa chọn nào?[cite: 2]", ["Nhập tên của auto text \\ nhấn CTRL+V", "Nhập tên của auto text \\ nhấn F3", "Đặt trỏ tại vị trí cần chèn \\ nhấn F3", "Nhập tên của auto text \\ ALT+F3"], 2],
+  ["Câu 56: Trong Word, để tạo 1 ghi chú (Comment) , bạn sử dụng lựa chọn nào?[cite: 2]", ["Chọn References\\New Comment \\ nhập nội dung \\ Enter", "Chọn Review\\New Comment \\ nhập nội dung \\ Enter", "Chọn Insert\\Comment \\ nhập nội dung \\ Enter", "Cả 3 lựa chọn trên đều sai"], 2],
+  ["Câu 57: Trong Word, để sao chép định dạng của chuỗi văn bản a cho chuỗi văn bản b, bạn sử dụng lựa chọn nào?[cite: 2]", ["Thẻ Home \\ chọn văn bản a \\ Format Painter \\ quét chọn văn bản b", "Thẻ Home \\ chọn Format Painter \\ quét chọn chuỗi văn bản b", "Thẻ Home \\ chọn Format Painter \\ quét chọn chuỗi văn bản a sau đó quét chọn văn bản b", "Thẻ Home \\ quét chọn văn bản b \\ Format Painter \\ quét chọn văn bản a"], 1],
+  ["Câu 58: Trong Powerpoint, để tắt chức năng kiểm tra chính tả tiếng Anh, bạn sử dụng lựa chọn nào?[cite: 2]", ["Review\\Spelling \\ Ignore", "PowerPoint Options\\Advanced", "PowerPoint Options\\Proofing", "Cả 3 lựa chọn trên đều sai"], 3],
+  ["Câu 59: Thiết bị nào sau đây dùng để kết nối mạng?[cite: 2]", ["Ram", "Rom", "Router", "CPU"], 3],
+  ["Câu 60: Hệ thống nhớ của máy tính bao gồm:[cite: 2]", ["Bộ nhớ trong, Bộ nhớ ngoài", "Cache, Bộ nhớ ngoài", "Bộ nhớ ngoài, ROM", "Đĩa quang, Bộ nhớ trong"], 1],
+  ["Câu 61: Trong mạng máy tính, thuật ngữ Share có ý nghĩa gì?[cite: 2]", ["Chia sẻ tài nguyên", "Nhãn hiệu của một thiết bị kết nối mạng", "Thực hiện lệnh in trong mạng cục bộ", "Một phần mềm hỗ trợ sử dụng mạng cục bộ"], 1],
+  ["Câu 62: Bộ nhớ RAM và ROM là bộ nhớ gì?[cite: 2]", ["Primary memory", "Receive memory", "Secondary memory", "Random access memory."], 1],
+  ["Câu 63: Các thiết bị nào thông dụng nhất hiện nay dùng để cung cấp dữ liệu cho máy xử lý?[cite: 2]", ["Bàn phím (Keyboard), Chuột (Mouse), Máy in (Printer) .", "Máy quét ảnh (Scaner).", "Bàn phím (Keyboard), Chuột (Mouse) và Máy quét ảnh (Scaner).", "Máy quét ảnh (Scaner), Chuột (Mouse)"], 3],
+  ["Câu 64: Khái niệm hệ điều hành là gì ?[cite: 2]", ["Cung cấp và xử lý các phần cứng và phần mềm", "Nghiên cứu phương pháp, kỹ thuật xử lý thông tin bằng máy tính điện tử", "Nghiên cứu về công nghệ phần cứng và phần mềm", "Là một phần mềm chạy trên máy tính, dùng để điều hành, quản lý các thiết bị phần cứng và các tài nguyên phần mềm trên máy tính"], 4],
+  ["Câu 65: Cho biết cách xóa một tập tin hay thư mục mà không di chuyển vào Recycle Bin:?[cite: 2]", ["Chọn thư mục hay tâp tin cần xóa \\ Delete", "Chọn thư mục hay tâp tin cần xóa \\ Ctrl + Delete", "Chọn thư mục hay tâp tin cần xóa \\ Alt + Delete", "Chọn thư mục hay tâp tin cần xóa \\ Shift + Delete"], 4],
+  ["Câu 66: Danh sách các mục chọn trong thực đơn gọi là :[cite: 2]", ["Menu pad", "Menu options", "Menu bar", "Tất cả đều sai"], 2],
+  ["Câu 67: Công dụng của phím Print Screen là gì?[cite: 2]", ["In màn hình hiện hành ra máy in.", "Không có công dụng gì khi sử dụng 1 mình nó.", "In văn bản hiện hành ra máy in.", "Chụp màn hình hiện hành."], 4],
+  ["Câu 68: Nếu bạn muốn làm cho cửa sổ nhỏ hơn (không kín màn hình), bạn nên sử dụng nút nào?[cite: 2]", ["Maximum", "Minimum", "Restore down", "Close"], 3],
+  ["Câu 69: Trong soạn thảo Word, công dụng của tổ hợp phím Ctrl – S là:[cite: 2]", ["Tạo một văn bản mới", "Chức năng thay thế nội dung trong soạn thảo", "Định dạng chữ hoa", "Lưu nội dung tập tin văn bản vào đĩa"], 4],
+  ["Câu 70: Trong soạn thảo Word, để chèn các kí tự đặc biệt vào văn bản, ta thực hiện:[cite: 2]", ["View – Symbol", "Format – Symbol", "Tools – Symbol", "Insert – Symbol"], 4],
+  ["Câu 71: Trong soạn thảo Word, để kết thúc 1 đoạn (Paragraph) và muốn sang 1 đoạn mới:[cite: 2]", ["Bấm tổ hợp phím Ctrl – Enter", "Bấm phím Enter", "Bấm tổ hợp phím Shift – Enter", "Word tự động, không cần bấm phím"], 2],
+  ["Câu 72: Trong soạn thảo Word, tổ hợp phím nào cho phép đưa con trỏ về cuối văn bản:[cite: 2]", ["Shift + End", "Alt + End", "Ctrl + End", "Ctrl + Alt + End"], 3],
+  ["Câu 73: Trong soạn thảo Word, sử dụng phím nóng nào để chọn tất cả văn bản:[cite: 2]", ["Alt + A", "Ctrl + A", "Ctrl + Shift + A", "Câu 1 và 2."], 2],
+  ["Câu 74: Trong soạn thảo Word, để chọn một đoạn văn bản ta thực hiện:[cite: 2]", ["Click 1 lần trên đoạn", "Click 2 lần trên đoạn", "Click 3 lần trên đoạn", "Click 4 lần trên đoạn."], 3],
+  ["Câu 75: Trong soạn thảo Word, muốn đánh dấu lựa chọn một từ, ta thực hiện:[cite: 2]", ["Nháy đúp chuột vào từ cần chọn", "Bấm tổ hợp phím Ctrl – C", "Nháy chuột vào từ cần chọn", "Bấm phím Enter"], 1],
+  ["Câu 76: Trong soạn thảo Word, muốn tách một ô trong Table thành nhiều ô, ta thực hiện:[cite: 2]", ["Table – Merge Cells", "Table – Split Cells", "Tools – Split Cells", "Table – Cells"], 2],
+  ["Câu 77: Trong soạn thảo Word, thao tác nào sau đây sẽ kích hoạt lệnh Paste (Chọn nhiều đáp án)[cite: 2]", ["Tại thẻ Home, nhóm Clipboard, chọn Paste", "Bấm tổ hợp phím Ctrl + V.", "Chọn vào mục trong Office Clipboar", "Tất cả đều đúng"], 4],
+  ["Câu 78: Phần mềm nào có thể soạn thảo văn bản với nội dung và định dạng như sau: “Công cha như núi Thái Sơn Nghĩa mẹ như nước trong nguồn chảy ra. Một lòng thờ mẹ kính cha Cho tròn chữ hiếu mới là đạo con”[cite: 2]", ["Notepad", "Microsoft Word", "WordPad", "Tất cả đều đúng"], 4],
+  ["Câu 79: Trong bảng tính Excel, giá trị trả về của công thức =LEN(“TRUNG TAM TIN HOC”) là:[cite: 2]", ["15", "16", "17", "18"], 3],
+  ["Câu 80: Trong bảng tính Excel, cho các giá trị như sau: ô A4 = 4, ô A2 = 5, ô A3 = 6, ô A7 = 7 tại vị trí ô B2 lập công thức B2 = Sum(A4,A2,Count(A3,A4)) cho biết kết quả ô B2 sau khi Enter:[cite: 2]", ["10", "9", "11", "Lỗi"], 3],
+  ["Câu 81: Trong bảng tính Excel, ô A1 chứa giá trị 5. Ta lập công thức tại ô B1 có nội dung như sau: =IF(A1>=5, “Trung Bình”, IF(A1>=7, “Khá”, IF(A1>=8, “Giỏi”, “Xuất sắc”))) khi đó kết quả nhận được là:[cite: 2]", ["Giỏi.", "Xuất sắc.", "Trung Bình.", "Khá."], 3],
+  ["Câu 82: Trong bảng tính Excel, hàm nào dùng để tìm kiếm:[cite: 2]", ["Vlookup", "IF", "Left", "Sum"], 1],
+  ["Câu 83: Trong bảng tính Excel, để lưu tập tin đang mở dưới một tên khác, ta chọn:[cite: 2]", ["File / Save As", "File / Save", "File / New", "Edit / Replace"], 1],
+  ["Câu 84: Trong bảng tính Excel, hàm Today() trả về:[cite: 2]", ["Số ngày trong tháng", "Số tháng trong năm", "Ngày hiện hành của hệ thống", "Số giờ trong ngày"], 3],
+  ["Câu 85: Trong bảng tính Excel, các dạng địa chỉ sau đây, địa chỉ nào là địa chỉ tuyệt đối:[cite: 2]", ["B$1$$10$D", "B$1", "$B1:$D10", "$B$1:$D$10."], 4],
+  ["Câu 86: Trong bảng tính Excel, Ô C2 chứa hạng của học sinh. Công thức nào tính học bổng theo điều kiện: Nếu xếp hạng từ hạng một đến hạng ba thì được học bổng là 200000, còn lại thì để trống[cite: 2]", ["=IF(C2>=3, 200000, 0)", "=IF(C2<=3, 200000, “”)", "=IF(C2<=3, 0, 200000)", "=IF(C2<3, 200000, “”)"], 2],
+  ["Câu 87: Trong bảng tính Excel, tại ô A2 có giá trị số 25; Tại ô B2 gõ vào công thức =SQRT(A2) thì nhận được kết quả:[cite: 2]", ["0", "5", "c#VALUE!", "#NAME!"], 2],
+  ["Câu 88: Trong Powerpoint để tạo mới 1 Slide ta sử dụng?[cite: 2]", ["Home \\ Slides \\ New Slide", "Insert \\ New Slide", "Design \\ New Slide", "View \\ New Slide"], 1],
+  ["Câu 89: Trong Powerpoint muốn đánh số trang cho từng Slide ta dùng lệnh nào sau đây:[cite: 2]", ["Insert\\ Bullets and Numbering", "Insert \\ Text \\ Slide Number.", "Format \\ Bullets and Number.", "Các câu trên đều sai"], 2],
+  ["Câu 90: Khi thiết kế các Slide, sử dụng Home \\ Slides \\ New Slide có ý nghĩa gì?[cite: 2]", ["Chèn thêm một slide mới vào ngay trước slide hiện hành", "Chèn thêm một slide mới vào ngay sau slide hiện hành", "Chèn thêm một slide mới vào ngay trước slide đầu tiên", "Chèn thêm một slide mới vào ngay sau slide cuối cùng"], 2],
+  ["Câu 91: Để trình chiếu một Slide hiện hành, bạn sử dụng lựa chọn nào? (Chọn nhiều lựa chọn)[cite: 2]", ["Nhấn tổ hợp phím Shift+F5", "Nhấn tổ hợp phím Ctrl+Shift+F5", "Slide Show \\ Start Slide Show \\ From Current Slide", "Nhấn phím F5"], 1],
+  ["Câu 92: Khi thiết kế Slide với PowerPoint, muốn thay đổi mẫu nền thiết kế của Slide, ta thực hiện:[cite: 2]", ["Design \\Themes …", "Design \\Background.", "Insert \\ Slide Design …", "Slide Show \\ Themes."], 1],
+  ["Câu 93: Chức năng công cụ nào sau đây trong nhóm dùng để xem trình chiếu slide đang hiển thị thiết kế:[cite: 2]", ["Normal", "Slide Sorter", "Slide show", "Reading view"], 3],
+  ["Câu 94: Chức năng Animations/ Timing/ Delay dùng để:[cite: 2]", ["Thiết lập thời gian chờ trước khi slide được trình chiếu", "Thiết lập thời gian chờ trước khi hiệu ứng bắt đầu", "Thiết lập thời gian hoạt động cho tất cả các hiệu ứng", "Tất cả đều đúng"], 2],
+  ["Câu 95: Để vẽ đồ thị trong Slide ta chọn:[cite: 2]", ["File/ Chart", "Insert/ Chart", "View/ Chart", "Design/ Chart"], 2],
+  ["Câu 96: Để hủy bỏ thao tác vừa thực hiện ta nhấn tổ hợp phím:[cite: 2]", ["Ctrl + X", "Ctrl + Z", "Ctrl + C", "Ctrl + V"], 2],
+  ["Câu 97: Khi một dòng chủ đề trong thư ta nhận được bắt đầu bằng chữ RE:; thì thông thường thư là:[cite: 2]", ["Thư rác, thư quảng cáo", "Thư mới", "Thư của nhà cung cấp dịch vụ E-mail mà ta đang sử dụng", "Thư trả lời cho thư mà ta đã gởi trước đó"], 4],
+  ["Câu 98: Website Yahoo.com hoặc gmail.com cho phép người sử dụng thực hiện[cite: 2]", ["Nhận thư", "Gởi thư", "Tạo hộp thư", "Cả 3 lựa chọn trên đúng"], 4],
+  ["Câu 99: Chức năng Bookmark của trình duyệt web dùng để:[cite: 2]", ["Lưu trang web về máy tính", "Đánh dấu trang web trên trình duyệt", "Đặt làm trang chủ", "Tất cả đều đúng"], 2],
+  ["Câu 100: Nếu không kết nối được mạng, bạn vẫn có thể thực hiện được hoạt động nào?[cite: 2]", ["Gửi email", "Viết thư", "Xem 1 trang web", "In trên máy in sử dụng chung cài đặt ở máy khác"], 2],
+  ["Câu 101: Khi muốn tìm kiếm thông tin trên mạng Internet, chúng bản cần[cite: 2]", ["Tìm kiếm trên các Websites tìm kiếm chuyên dụng", "Tùy vào nội dung tìm kiếm mà kết nối đến các Websites cụ thể.", "Tìm kiếm ở bất kỳ một Websites nào", "Tìm trong các sách danh bạ internet"], 1],
+  ["Câu 102: Khả năng xử lý của máy tính phụ thuộc vào … bạn sử dụng lựa chọn nào?[cite: 2]", ["Tốc độ CPU, dung lượng bộ nhớ RAM, dung lượng và tốc độ ổ cứng.", "Yếu tố đa nhiệm", "Hiện tượng phân mảnh ổ đĩa.", "Cả 3 phần trên đều đúng."], 4],
+  ["Câu 103: Máy tính là gì?[cite: 2]", ["Là công cụ chỉ dùng để tính toán các phép tính thông thường.", "Là công cụ cho phép xử lý thông tin một cách tự động.", "Là công cụ cho phép xử lý thông tin một cách thủ công.", "Là công cụ không dùng để tính toán."], 2],
+  ["Câu 104: Trình tự xử lý thông tin của máy tính điện tử[cite: 2]", ["Màn hình \\ CPU \\ Đĩa cứng", "Đĩa cứng \\ Màn hình \\ CPU", "Nhập thông tin \\ Xử lý thông tin \\ Xuất thông tin", "Màn hình \\ Máy in \\ CPU"], 3],
+  ["Câu 105: Thiết bị xuất của máy tính gồm?[cite: 2]", ["Bàn phím, màn hình, chuột", "Màn hình, máy in.", "Chuột, màn hình, CPU", "Bàn phím, màn hình, loa"], 2],
+  ["Câu 106: Trong ứng dụng windows Explorer, để chọn nhiều tập tin hay thư mục KHÔNG liên tục ta thực hiện thao tác kết hợp phím … với click chuột.[cite: 2]", ["Shift", "Alt", "Tab", "Ctrl"], 4],
+  ["Câu 107: Phím tắt để sao chép một đối tượng vào ClipBoard là:[cite: 2]", ["Ctrl + X", "Ctrl + C", "Ctrl + V", "Ctrl + Z"], 2],
+  ["Câu 108: Hộp điều khiển việc phóng to, thu nhỏ, đóng cửa sổ gọi là:[cite: 2]", ["Dialog box", "Control box", "List box", "Text box"], 2],
+  ["Câu 109: Để đảm bảo an toàn dữ liệu ta chọn cách nào?[cite: 2]", ["Đặt thuộc tính hidden.", "Copy nhiều nơi trên ổ đĩa máy tính", "Đặt thuộc tính Read only", "Sao lưu dự phòng"], 4],
+  ["Câu 110: Trong hệ điều hành windows chức năng Disk Defragment gọi là?[cite: 2]", ["Chống phân mảnh ổ cứng", "Làm giảm dung lượng ổ cứng", "Sao lưu dữ liệu ổ cứng", "Lau chùi tập tin rác ổ cứng"], 1],
+  ["Câu 111: Trong soạn thảo word, công dụng của tổ hợp phím Ctrl + O dùng để[cite: 2]", ["Tạo một văn bản mới", "Đóng văn bản đang làm việc", "Mở 1 văn bản đã có trên máy tính", "Lưu văn bản đang làm việc"], 3],
+  ["Câu 112: Khi làm việc với văn bản word, để bật chế độ nhập ký tự Subscript khi tạo ký tự hóa học H2O Ta sử dụng chức năng nào: (Có thể chọn nhiều câu đúng).[cite: 2]", ["Nhấn tổ hợp phím Ctrl + =", "Nhấn tổ hợp phím Ctrl + Shift + +", "Click chọn biểu tượng X2 (Superscipt) trong nhóm Font", "Click chọn biểu tượng X2 (Subscript) trong nhóm Font"], 4],
+  ["Câu 113: Trong word, biểu tượng cây chổi có chức năng gì?[cite: 2]", ["Sao chép nội dung văn bản", "Canh lề văn bản", "Sao chép định dạng", "Mở văn bản đã có"], 3],
+  ["Câu 114: Người đọc biết tập tin đang mở là phiên bản cuối cùng và chỉ cho phép đọc, bạn chọn?[cite: 2]", ["File \\ info \\ Protect Document \\ Restrict Editing", "Review \\Restrict Editing \\ Editing restrictions \\ No changes (Read only)", "File \\ info \\ Protect Document \\ Mark as Final", "File \\ info \\ Protect Document \\ Encrypt as Password"], 3],
+  ["Câu 115: Thuộc tính phần mềm microsoft word 2010 có phần mở rộng là gì? ( Cho phép chọn nhiều)[cite: 2]", [".doc", ".docx", ".dot", ".txt"], 2],
+  ["Câu 116: Câu nào sau đây sai khi nhập dữ liệu vào bảng tính Excel thì:[cite: 2]", ["Dữ liệu kiểu số sẽ mặc nhiên canh thẳng lề trái", "Dữ liệu kiểu ký tự sẽ mặc nhiên canh thẳng lề trái", "Dữ liệu kiểu thời gian sẽ mặc nhiên canh thẳng lề phải", "Dữ liệu kiểu ngày tháng sẽ mặc nhiên canh thẳng lề phải."], 1],
+  ["Câu 117: Biểu thức sau = AND(5>4,6<9,2<1,10>7,OR(2<1,3>2))[cite: 2]", ["True", "False", "#Name?", "#Value!"], 2],
+  ["Câu 118: Địa chỉ B$3 là địa chỉ:[cite: 2]", ["Tương đối", "Tuyệt đối", "Hỗn hợp", "Biểu diễn sai"], 3],
+  ["Câu 119: Trong powerpoint in ấn ta sử dụng chức năng[cite: 2]", ["Home \\ Print", "Insert \\ Print", "Design \\ Print", "File \\ Print"], 4],
+  ["Câu 120: Để tạo một slide chủ chứa các định dạng chung của toàn bộ các slide trong bài trình diễn. Để thực hiện điều này người dùng phải chọn:[cite: 2]", ["View \\ Master Slide", "Insert \\ Slide Master", "View \\ Slide Master", "Insert \\ Master Slide"], 3],
+  ["Câu 121: Trong ứng dụng PowerPoint chức năng hyperlink dùng để tạo liên kết[cite: 2]", ["Slide trong cùng 1 presentation", "Slide không cùng 1 presentation", "Địa chỉ email, trang web, tập tin.", "Các lựa chọn trên đều đúng."], 4],
+  ["Câu 122: Trong PowerPoint 2010 muốn chèn một đoạn nhạc vào Slide, ta dùng lệnh nào sau đây?[cite: 2]", ["Insert \\ Audio", "Insert \\ Component", "Insert \\ Diagram", "Insert \\ Comment"], 1],
+  ["Câu 123: Tại một slide trong powerpoint ta dùng tổ hợp nào sau đây để xóa slide đó?[cite: 2]", ["ALT + I + D", "ALT + E + F", "ALT + E + D", "ALT + W + P"], 3],
+  ["Câu 124: Hai người chat với nhau qua mạng Yahoo Messenger trong cùng một phòng nét?[cite: 2]", ["Dữ liệu truyền từ máy đang chat lên máy chủ phòng nét và quay về máy chat bên kia.", "Dữ liệu đi trực tiếp giữa hai máy đang trong phòng chat.", "Dữ liệu truyền về máy chủ Yahoo và quay về máy bên kia.", "Dữ liệu truyền về máy chủ internet Việt Nam và quay về máy đang chat."], 3],
+  ["Câu 125: Tên miền trong địa chỉ website có .edu cho biết Website đó thuộc về?[cite: 2]", ["Lĩnh vực chính phủ", "Lĩnh vực giáo dục", "Lĩnh vực cung cấp thông tin", "Thuộc về các tổ chức khác"], 2],
+  ["Câu 126: Website là gì?[cite: 2]", ["Là một ngôn ngữ siêu văn bản.", "Là hình thức trao đổi thông tin dưới dạng thư thông qua hệ thống mạng máy tính.", "Là các file được tạo ra bởi Word, Excel, PowerPoint … rồi chuyển sang html.", "Tất cả đều sai."], 4],
+  ["Câu 127: Phần mềm nào sau đây không phải trình duyệt WEB?[cite: 2]", ["Microsoft", "Mozilla Firefox", "Netcape", "Unikey"], 4],
+  ["Câu 128: Dịch vụ lưu trữ đám mây của Microsoft là gì?[cite: 2]", ["Google Driver", "Mediafire", "OneDrive", "Cả 3 câu hỏi trên đều đúng."], 3],
+  ["Câu 129: Trong Word, muốn tạo chú thích ở chân trang (footnote), bạn sử dụng lựa chọn nào?", ["Insert \\ nhóm Footnotes \\ Insert Footnote", "References \\ nhóm Footnotes \\ Insert Endnote", "References \\ nhóm Footnotes \\ Insert Footnote", "Home \\ nhóm Footnotes \\ Insert Footnote"], 3],
+  ["Câu 130: Trong Word, để thực hiện việc ghép các ô trong một bảng, bạn sử dụng lựa chọn nào? (Chọn nhiều trả lời)", ["Right Click \\ Split Cells", "Right Click \\ Merge Cells", "Nhấn tổ hợp phím CTRL – M", "Click chọn biểu tượng (Merge Cells) trên nhóm Layout của Table Tools"], 2],
+  ["Câu 131: Trong Word, muốn chèn ngày tháng năm hiện hành vào văn bản, bạn thực hiện thế nào?", ["Home \\ nhóm Editing \\ Field… \\ Date", "Insert \\ nhóm Text \\ Field… \\ Date", "Insert \\ nhóm Text \\ Quick Parts \\ Field… \\ Date", "Insert \\ nhóm Text \\ Quick Parts \\ Date"], 3],
+  ["Câu 132: Trong Word, để thực hiện việc ngắt cột trong văn bản, bạn sử dụng lựa chọn nào? (Chọn nhiều trả lời)", ["Chọn Page Layout \\ Breaks \\ Column", "Chọn Page Layout \\Columns", "Chọn Page Layout \\ Text Direction", "Nhấn tổ hợp phím CTRL+ SHIFT+ Enter"], 1],
+  ["Câu 133: Để chắc chắn font chữ trong văn bản của bạn vẫn được hiển thị đúng trên bất kỳ máy tính khác, sau khi vào Options\\Save, bạn sử dụng lựa chọn nào?", ["Embed True Type Fonts", "Embed fonts in the file", "Save True Type Fonts", "Save Fonts"], 2],
+    ["Câu 134: Cho biết công cụ nào dùng để sao chép định dạng trong Word?", ["(Paste)", "Select Objects", "Format Paint", "Paste Special…"], 3],
+    ["Câu 135: Tại tiêu đề đầu trang (Header), muốn di chuyển đến tiêu đề cuối trang (Footer), bạn sử dụng lựa chọn nào?", ["Nút Next", "Nút Insert Footer", "Nút Go to Footer", "Nút Edit Header"], 3],
+    ["Câu 136: Trong Word, để tạo 1 ghi chú (Comment) , bạn sử dụng lựa chọn nào?", ["Chọn Insert\\Comment \\ nhập nội dung \\ Enter", "Chọn References\\New Comment \\ nhập nội dung \\ Enter", "Chọn Review\\New Comment \\ nhập nội dung \\ Enter", "Cả 3 lựa chọn trên đều sai"], 3],
+    ["Câu 137: Trong Word, sau khi so sánh 2 văn bản trong file kết quả so sánh, để chấp nhận tất cả các khác biệt, bạn sử dụng lựa chọn nào? (Chọn nhiều trả lời)", ["Chọn điểm khác biệt \\ chọn Review\\Changes\\Accept", "Chọn Review \\ lần lượt chọn từng điểm khác biệt \\ Changes\\Accept", "Chọn Review\\Changes\\Accept all Changes in Document", "Chọn Review\\Changes\\Reject all Changes in Document"], 3],
+    ["Câu 138: Trong Word, để thêm thẻ Developer vào thanh Ribbon: sau khi vào File\\Options, bạn sử dụng lựa chọn nào?", ["Chọn mục Developer \\ OK", "Chọn Customize Ribbon \\ double click vào mục Developer", "Chọn Customize Ribbon \\ chọn mục Developer \\ OK", "Chọn Advanced\\Customize Ribbon, chọn mục Developer, click OK"], 3],
+    ["Câu 139: Trong Word, để áp dụng các đầu trang, cuối trang (Header/Footer) khác nhau cho trang chẵn, trang lẻ, bạn sử dụng lựa chọn nào?", ["Different First Page", "Different Odd & Even Pages", "Cả 2 lựa chọn trên đều đúng", "Cả 2 lựa chọn trên đều sai"], 2],
+    ["Câu 140: Để hiển thị đường lưới trong Table (Winword), bạn sử dụng lựa chọn nào?", ["Table Tools\\Design\\Show Gridlines", "Table Tools\\Design\\View Gridlines", "Table Tools\\Layout\\Table \\ View Gridlines", "Table Tools\\Layout\\Show \\ View Gridlines"], 3],
+    ["Câu 141: Trong Word, để chọn danh sách dữ liệu khi phối thư, sau khi chọn thẻ Mailings bạn sử dụng lựa chọn nào?", ["Chọn Edit Recipients List", "Chọn Insert Merge Field", "Chọn Select Recipients", "Cả 3 lựa chọn đều sai"], 3],
+    ["Câu 142: Trong WinWord, nội dung của vùng Header sẽ:", ["Được in ở đầu mỗi trang", "Được in ở cuối mỗi trang", "Được in bên trái mỗi trang", "Được in bên phải mỗi trang"], 1],
+    ["Câu 143: Trong Excel, muốn đặt mật khẩu bảo vệ khi mở trang tính, bạn sử dụng lựa chọn nào? (Chọn nhiều trả lời)", ["File \\ Info \\Protect Workbook \\ Encrypt with Password", "File \\ Info \\Protect Workbook \\ Password to Open", "File \\ Save as \\ Tools \\ General Options \\ Password to Open", "File \\ Save as \\ Tools \\ General Options \\ Encrypt with Password"], 1],
+    ["Câu 144: Trong Excel, để thực hiện việc thêm trục thứ 2 vào biểu đồ, bạn sử dụng lựa chọn nào?", ["Right Click \\ Format Data Series \\ Primary Axis", "Right Click \\ Format Data Series \\ Secondary Axis", "Click chọn biểu tượng (Change Chart Type) trên nhóm Type của Tab Design", "Cả 3 lựa chọn trên đều sai"], 2],
+    ["Câu 145: Để tìm các vùng có sử dụng công thức, bạn sử dụng lựa chọn nào? (Chọn nhiều trả lời)", ["Vào Home, Find & Select, chọn Select Objects", "Vào Home, Find & Select, chọn Formulas", "Vào Home, Find & Select, chọn Go to Special, chọn Formulas", "Vào Home, Find & Select, chọn Go to, Special, chọn Formular"], 3],
+    ["Câu 146: Trong Excel, để thực hiện cách lọc một danh sách (lọc nâng cao), bạn sử dụng lựa chọn nào?", ["Click chọn biểu tượng (Filter) trên nhóm Sort & Filter của Tab Data", "Click chọn biểu tượng (Clear) trên nhóm Sort & Filter của Tab Data", "Click chọn biểu tượng (Advanced) trên nhóm Sort & Filter của Tab Data", "Click chọn biểu tượng (Reapply) trên nhóm Sort & Filter của Tab Data"], 3],
+    ["Câu 147: Chức năng của hàm COUNTIFS trong Excel là:", ["Hàm tính tổng các ô trong một vùng thỏa nhiều điều kiện cho trước", "Hàm tính trung bình cộng các ô trong một vùng thỏa nhiều điều kiện cho trước", "Hàm đếm số lượng các ô trong vùng dữ liệu thỏa điều kiện của vùng tiêu chuẩn", "Hàm đếm số lượng các ô trong một vùng thỏa nhiều điều kiện cho trước"], 4],
+    ["Câu 148: Để xóa đồng thời nội dung, định dạng, ghi chú, liên kết trong bảng tính, sau khi chọn toàn bộ bảng tính, bạn sử dụng lựa chọn nào?", ["Vào Home\\Clear \\ Clear Contents", "Vào Home\\Clear \\ Clear Formats", "Vào Home\\Clear \\ Clear Hyperlink", "Vào Home\\Clear \\ Clear All"], 4],
+    ["Câu 149: Trong bảng tính Excel, nếu thí sinh đạt từ 5 điểm trở lên, thí sinh đó được xếp loại Đạt, ngược lại nếu dưới 5 điểm thì xếp loại Không Đạt. Theo bạn, công thức nào dưới đây là công thức đúng (Giả sử ô G6 đang chứa điểm thi)", ["IF(G6>=5,”Đạt”) ELSE (“Không đạt”).", "IF(G6<5,”Không đạt”,”Đạt”).", "IF(G6=<5,”Đạt”,”Không đạt”).", "IF(G6>5,”Đạt”,”Không đạt”)."], 2],
+    ["Câu 150: Trong Excel, để đưa vào trang tính các dữ liệu từ Access, bạn sử dụng lựa chọn nào?", ["Vào Insert\\Object \\ chọn Microsoft Access", "Vào Data\\From Other Sources \\ chọn Access", "Vào Data\\Get External Data \\ From Acces", "Cả 3 lựa chọn trên đều sai"], 3],
+    ["Câu 151: Trong bảng tính Excel 2010, chức năng Data \\Data Validation\\ Settings \\ Text length dùng để làm gì?", ["Ràng buộc dữ liệu trên các ô bảng tính khi nhập vào chỉ cho phép nhập vào là chuỗi có chiều dài xác định", "Xuất kết quả tính toán chỉ là chuỗi", "Ràng buộc dữ liệu trên các ô bảng tính khi nhập vào chỉ cho phép nhập vào là chuỗi", "Tất cả đều đúng"], 1],
+    ["Câu 152: Trong Excel, để tạo một liên kết từ ô A40 đến 1 trang web, bạn sử dụng lựa chọn nào trong hộp Link To?", ["Existing File or Web Page", "Place in This Document", "Email Address", "Cả 3 lựa chọn trên đều sai"], 1],
+    ["Câu 153: Cho biểu đồ dạng cột. Muốn thay đổi biểu đồ để kết hợp dạng cột và dạng đường, sau khi chọn thành phần cần chuyển sang dạng đường, bạn sử dụng lựa chọn nào sau đây?", ["Thẻ Design \\ Chart Layouts \\ Line", "Thẻ Format\\ Format Selection", "Thẻ Design\\ Switch Row\\Column", "Thẻ Design\\ Change Chart Type\\ Line"], 4],
+    ["Câu 154: Trong Excel, để làm ẩn một số cột của trang tính, bạn sử dụng lựa chọn nào? (Chọn nhiều trả lời)", ["Chuột phải vào biên cột \\ chọn Hide", "Chọn các cột cần làm ẩn, vào Home\\Format \\ chọn Hide & Unhide", "Chọn các cột cần làm ẩn, vào View\\Hide", "Cả 3 lựa chọn trên đều đúng"], 4],
+    ["Câu 155: Trong Excel, để bảo vệ trang tính bằng mật khẩu, bạn sử dụng lựa chọn nào sau đây?", ["File\\Protect \\ Protect Sheet", "Review\\Protect \\ Protect Sheet", "Review\\Changes \\ Protect Sheet", "Cả 3 lựa chọn trên đều sai"], 2],
+    ["Câu 156: Trong Excel, giả sử ô A4 chứa kết quả một công thức, để sao chép kết quả (chỉ lấy giá trị) trên vào ô A8, bạn sử dụng lựa chọn nào?", ["Tại ô A4 \\ Copy, tại ô A8 \\ Paste", "Tại ô A4 \\ Copy, tại ô A8 \\ Paste Special, chọn Formula", "Tại ô A4 \\ Copy, tại ô A8 \\ Paste Special, chọn Value", "Tại ô A8 \\ Copy, tại ô A4 \\ Paste Special, chọn Formula"], 3],
+    ["Câu 157: Trong Excel, để đặt tên một vùng gồm nhiều ô, bạn sử dụng lựa chọn nào?", ["Formulas – Chọn Name Manager – New – đặt tên vùng và chọn vùng cần đặt tên", "Formulas – Define Name – đặt tên vùng và chọn vùng cần đặt tên", "Cả 2 lựa chọn đều sai", "Cả 2 lựa chọn đều đúng"], 4],
+    ["Câu 158: Trong PowerPoint, muốn trình chiếu Slide hiện hành? (Chọn nhiều trả lời)", ["Slide Show \\ nhóm Start Slide Show \\ From Current Slide", "Nhấn tổ hợp phím Shift + F5", "Nhấn tổ hợp phím Ctrl + F5", "Slide Show \\ nhóm Start Slide Show \\ From Beginning"], 2],
+    ["Câu 159: Trong PowerPoint, để thực hiện việc lưu một mẫu đang có thành mẫu (.potx) mới, bạn sử dụng lựa chọn nào?", ["File \\Save As \\Save As Type chọn PowerPoint Presentation", "File \\Save As \\Save As Type chọn PowerPoint Template", "File \\Save As \\Save As Type chọn Office Theme", "File \\Save As \\Save As Type chọn PDF"], 2],
+    ["Câu 160: Trong PowerPoint, muốn chuyển bài trình chiếu thành định dạng PDF ta có thể thực hiện? (Chọn nhiều trả lời)", ["File \\ Save as \\ Save as type \\ PDF(*.pdf)", "File \\ Save & Send \\ Create PDF", "File \\ Save & Send \\ Create PDF/XPS Document", "Tất cả các lựa chọn trên đều sai"], 3],
+    ["Câu 161: Lựa chọn nào sau đây được sử dụng để điều chỉnh thời gian cho từng slide trong bài thuyết trình?", ["Slider Timings", "Slider Timer", "Rehearse Timings", "Slide Show Setup"], 3],
+    ["Câu 162: Để tạo nhanh 1 bài trình chiếu đơn giản (với sự hỗ trợ của PowerPoint), sau khi vào File\\New, bạn sử dụng lựa chọn nào?", ["Presentation", "Sample template", "Themes", "Cả 3 lựa chọn trên đều sai"], 2],
+    ["Câu 163: Để xuất một bài trình chiếu sang .XPS, bạn sử dụng lựa chọn nào?", ["File\\Save As", "File\\Save & Send", "Cả 2 lựa chọn trên đều đúng", "Cả 2 lựa chọn trên đều sai"], 2],
+    ["Câu 164: Motion Path theo bạn là gì?", ["Là tên một hiệu ứng thuộc nhóm hiệu ứng Emphasis", "Là tên một phương thức trình chiếu chuyên nghiệp", "Là tên một nhóm hiệu ứng cho phép đối tượng di chuyển theo một đường cho trước", "Cả 3 lựa chọn trên đều sai"], 3],
+    ["Câu 165: Chức năng nào được dùng để đóng gói bài thuyết trình trong PowerPoint?", ["Save as", "Save & Send", "Pack and Go", "Web and Go"], 3],
+    ["Câu 166: Lựa chọn nào sau đây thuộc về thẻ View trong Powerpoint? (Chọn nhiều trả lời)", ["Slide Sorter", "Notes Page", "Presentation View", "Outline view"], 1],
+    ["Câu 167: Khi tạo hiệu ứng cho 1 đối tượng, muốn hiệu ứng này chỉ được thực hiện khi click vào 1 đối tượng khác, bạn dùng chức năng gì?", ["Trigger.", "Animation Painter.", "On Mouse Click.", "Cả 3 lựa chọn trên đều sai."], 1],
+    ["Câu 168: Trình bày cách sử dụng nhiều Theme trong cùng 1 tập tin PowerPoint?", ["Chọn slide \\click chọn 1 theme, lập lại cho các slide khác.", "Chọn slide \\vào Design, click chọn 1 theme, lập lại cho các slide khác.", "Chọn slide \\right click vào theme \\Apply to Selected Slides, lập lại cho các slide khác.", "Cả 3 lựa chọn trên đều đúng."], 3],
+    ["Câu 169: Trong Power Point 2010, cách sử dụng file mẫu (Power point template), bạn sử dụng lựa chọn nào sau:", ["File \\New \\My template \\chọn mẫu", "File \\Open\\Chọn mẫu", "Insert \\Themes\\Chọn mẫu", "Cả 3 câu đều đúng"], 1],
+    ["Câu 170: Trong PowerPoint, để chèn âm thanh vào bài trình diễn, bạn sử dụng lựa chọn nào?", ["Chèn trực tiếp từ thẻ Insert", "Chèn thông qua hiệu ứng chuyển động của đối tượng", "Chèn thông qua hiệu ứng chuyển cảnh", "Cả 3 lựa chọn trên đều đúng"], 4],
+    ["Câu 171: Trong PowerPoint, muốn xuất hiện bút để đánh dấu khi trình chiếu, bạn sử dụng lựa chọn nào?", ["Nhấn tổ hợp phím Ctrl+P", "Nhấn phím P", "Nhấn tổ hợp phím Alt+P", "Tất cả lựa chọn trên đều sai"], 1],
+    ["Câu 172: Để thay đổi biểu đồ dạng Column sang biểu đồ dạng Line, bạn sử dụng lựa chọn nào?", ["Chuột phải vào biên biểu đồ \\Change Chart Type", "Chart Tools\\Design \\Change Chart Type", "Cả 2 lựa chọn trên đều đúng", "Cả 2 lựa chọn trên đều sai"], 3],
+    ["Câu 173: Trong Word, để ghép các ô đang chọn trong 1 bảng thành 1 ô, bạn sử dụng lựa chọn nào?", ["Thẻ Layout \\ Split Cells", "Thẻ Layout \\ Split Table", "Thẻ Layout \\ Merge Cells", "Thẻ Layout \\ Margin Cells"], 3],
+    ["Câu 174: Chế độ hiển thị Slide Sorter được cung cấp trong thẻ nào của PowerPoint?", ["Edit", "View", "Insert", "File"], 2],
+    ["Câu 175: Để thiết lập thời gian slide tự động chuyển sau 3 giây, bạn sử dụng lựa chọn nào?", ["Thẻ View", "Thẻ Animations", "Thẻ Transitions", "Cả 3 lựa chọn trên đều sai"], 3],
+    ["Câu 176: Để xóa tất cả ghi chú trong tập tin Powerpoint, sau khi chọn đối tượng đầu tiên có ghi chú, bạn sử dụng lựa chọn nào?", ["Delete", "Delete all Markup in this Presentation", "Delete all Markup on the Current Slide", "Cả 3 lựa chọn trên đều sai"], 2],
+    ["Câu 177: Để đóng nhanh một cửa số trong Windows ta dung tổ hợp phím nào sau đây?", ["ALT – F1", "ALT – F3", "ALT – F2", "ALT – F4"], 4],
+    ["Câu 178: Trong soạn thảo Word, muốn tạo chữ rơi cho văn bản bạn thực hiện:", ["View \\ Dropcap", "Page Layout \\ Dropcap", "Insert \\ Dropcap", "Home \\ Dropcap"], 3],
+    ["Câu 179: Trong Powerpoint muốn xóa một slide, ta dùng lệnh nào sau đây?", ["File\\ Delete Slide", "Edit\\ Delete Slide", "Ý 1 và 2 đều đúng", "Cả 3 ý trên đều sai"], 4],
+    ["Câu 180: Trang Web Youtube là gì?", ["Mạng xã hội", "Đọc tin tức", "Trang Web chia sẻ video trực tuyến", "Thư điện tử"], 3],
+    ["Câu 181: Trong Powerpoint muốn chèn thêm WordArt (chữ nghệ thuật):", ["Insert \\Text\\ WordArt", "Kích biểu tượng Fill Color", "Insert \\ Chart", "Design \\ Format Background"], 1],
+    ["Câu 182: Trong bảng tính Excel, khi nhập giá trị 3+4 vào trong ô A3 của Sheet1 và Enter thì nội dung hiển thị trên ô A3 là:", ["#Name?", "7", "Không hiển thị gì cả", "3+4"], 4],
+    ["Câu 183: Trong Powerpoint cho biết phím tắt để chạy phiên trình chiếu?", ["Phím F7", "Phím F3", "Phím F9", "Phím F5"], 4],
+    ["Câu 184: Để tạo hiệu ứng cho các đối tượng trong slide, thực hiện:", ["Animations \\ Animation, sau đó chọn kiểu hiệu ứng mong muốn", "Transitions \\ Transition to This lide, sau đó chọn kiểu hiệu ứng mong muốn", "Slide Show \\ Custom Shows, sau đó chọn kiểu hiệu ứng mong muốn.", "Tất cả các phương án trên đều sai"], 1],
+    ["Câu 185: Trong bảng tính Excel, công thức =Mod(26,7) cho kết quả:", ["6", "4", "5", "3"], 3],
+    ["Câu 186: Trong soạn thảo Word, muốn di chuyển một đoạn văn bản thì ta bôi đen đoạn văn bản đó và bấm tổ hợp phím:", ["Ctrl – C \\ Ctrl – V", "Ctrl – X \\ Ctrl – V", "Ctrl – Y", "Ctrl – Z"], 2],
+    ["Câu 187: Trong soạn thảo Word, khi làm việc với văn bản muốn in đậm nội dung văn bản đang chọn khối bạn bấm tổ phím:", ["Ctrl – B", "Ctrl – D", "Ctrl – A", "Ctrl – C"], 1],
+    ["Câu 188: Trong soạn thảo Word, phím tắt nào sau đây để dịnh dạng chữ in nghiêng:", ["CTRL+B", "CTRL+I", "CTRL+L", "CTRL+R"], 2],
+    ["Câu 189: Công dụng của thư điện tử (Email) là gì?", ["Gửi thư điện tử", "Gửi thư quảng cáo qua mạng", "Gửi dữ liệu qua mạng", "Tất cả đáp án trên đều đúng"], 4],
+    ["Câu 190: Trong Powerpoint muốn chèn một lưu đồ vào slide, ta thực hiện chức năng nào sau đây:", ["Insert \\ SmartArt", "Table \\ Insert Table", "Cả hai câu đều sai", "Cả hai câu đều đúng"], 1],
+    ["Câu 191: Trong soạn thảo Word, muốn chuyển đổi giữa hai chế độ gõ: chế độ gõ chèn và chế độ gõ thay thế; ta nhấn phím nào trên bàn phím", ["CapsLock", "Delete", "Tab", "Insert"], 4],
+    ["Câu 192: Phần mềm nào sau đây sử dụng mã nguồn mở?", ["Microsoft Office", "Photoshop", "Windows Media", "Linux"], 4],
+    ["Câu 193: Trong Powerpoint có những dạng hiển thị nào sau đây?", ["Slide Sorter", "Notes page", "Normal", "Tất cả đáp án trên đều đúng"], 4],
+    ["Câu 194: Cho biết phần mềm nào dùng để duyệt Web?", ["Internet Explorer", "Google Chrome", "Mozilla FireFox", "Tất cả các đáp án trên đều đúng"], 4],
+    ["Câu 195: Hãy cho biết đâu là trình duyệt web của Microsoft?", ["Google chrome", "Internet Explorer", "Cốc cốc", "Firefox"], 2],
+    ["Câu 196: Trong bảng tính Excel, để tách dữ liệu trong một ô thành hai hoặc nhiều ô, ta thực hiện:", ["Thẻ Fomulas – Text to Columns – Delimited.", "Thẻ Data – Text to Columns – Delimited", "Thẻ Home – Text to Columns – Delimited", "Thẻ Insert – Text to Columns – Delimited"], 2],
+    ["Câu 197: Cho biết phím tắt để lưu trang Web về máy tính?", ["Ctrl – O", "Ctrl – S", "Ctrl – B", "Ctrl – A"], 2],
+    ["Câu 198: Trong Windows Explorer muốn tạo thư mục mới ta thực hiện?", ["View \\ New \\ Folder", "File \\ New \\ Folder", "Edit \\ New \\ Folder", "Tool \\ New \\ Folder"], 2],
+    ["Câu 199: Trong Powerpoint, khi đang thực hiện trình chiếu muốn thoát phiên trình chiếu phải làm sao ?", ["Click chuột phải \\ Exit", "Click chuột phải \\ End Show", "Click chuột phải \\ Return", "Click chuột phải \\ Quit"], 2],
+    ["Câu 200: Trong Powerpoint để vẽ một biểu đồ, chọn?", ["Amimation \\ Chart", "Design \\ Chart", "Insert \\ Illustration \\ Chart", "Home \\ Chart"], 3],
+    ["Câu 201: Để máy tính có thể làm việc hệ điều hành được cài đặt ở đâu?", ["Rom", "Ổ đĩa cứng", "Ram", "Tất cả đều sai"], 2],
+    ["Câu 202: Ý nghĩa Recycle Bin trong Windows?", ["Phần mềm chơi game", "Phần mềm duyệt Web", "Nơi chứa các tập tin, thư mục đã xóa", "Nơi chứa các tập tin, thư mục quan trọng"], 3],
+    ["Câu 203: Trong Windows Explorer, muốn sửa đổi tên của một thư mục, tập tin ta nhấp phải chuột trên thư mục, tập tin đó và chọn:", ["Search", "Create shortcut", "Rename", "Properties"], 3],
+    ["Câu 204: Font chữ nào sau đây thuộc bảng mã TCVN3 (ABC)?", ["Vni-Brush", ".VnTime", "Vni-times", "Tahoma"], 2],
+    ["Câu 205: Cho biết cú pháp tìm nội dung ở trang Web zing.vn trên Google?", ["Site:zing.vn <Nội dung>", "vn <Nội dung>", "<Nội Dung> Zing.vn", "Website:zing.vn <Nội dung>"], 1],
+    ["Câu 206: Bộ xử lý trung tâm của máy tính là?", ["CPU", "Rom", "Ram", "Router"], 1],
+    ["Câu 207: Các kiểu dữ liệu thông dụng của Excel là:", ["Kiểu chuỗi, kiểu số, kiểu ngày tháng, kiểu công thức", "Kiểu số, kiểu lôgic, kiểu ngày tháng", "Kiểu chuỗi, kiểu văn bản, kiểu ngày tháng", "Kiểu công thức, kiểu hàm, kiểu số, kiểu ngày tháng"], 1],
+    ["Câu 208: Trong soạn thảo Word, để định dạng đường khung cho một đoạn văn bản bạn chọn:", ["Clip Art", "Word Art", "Picture", "Tất cả đáp án trên đều sai"], 4],
+    ["Câu 209: Trong bảng tính Excel, khi cần so sánh khác nhau thì sử dụng kí hiệu:", ["&", "< >", "#", "><"], 2],
+    ["Câu 210: Trên trình duyệt web google chomre để xóa lịch sử truy cập website ta chọn?", ["Chọn địa chỉ website và ấn delete", "Lịch sử /xóa dữ liệu duyệt web", "Cả 2 câu trên điều đúng.", "Cả 3 câu trên điều sai"], 2],
+    ["Câu 211: Lựa chọn nào không là kiểu của tập tin PowerPoint", [".ppsx", ".ptp", ".pptx", ".potx"], 2],
+    ["Câu 212: Trên Windows Explorer thành phần “Status bar” có ý nghĩa:", ["Hiển thị các lệnh làm việc", "Hiển thị thông hiện tại của thư mục hiện hành", "Không có thành phần “Status bar” trên Windows Explorer", "Tất cả đều đúng"], 2],
+    ["Câu 213: Trong ứng dụng PowerPoint chức năng hyperlink dùng để tạo kết nối", ["Slide không cùng 1 presentation", "Địa chỉ e-mail, trang Web, tập tin", "Slide trong cùng 1 presentation", "Các chọn lựa trên đều đúng"], 4],
+    ["Câu 214: Để truy cập vào một trang Web chúng ta cần phải biết:", ["Trang web đó của nước nào.", "Tên miền của trang Web.", "Hệ điều hành đang sử dụng.", "Tất cả đều sai."], 2],
+    ["Câu 215: Trong Windows làm thế nào giúp bạn truy cập nhanh vào menu Start ? (cho phép chọn nhiều)", ["Ctrl + Esc", "Ctrl + Alt +Esc", "Nhấn phím Window", "Không có cách nào khác, phải nhấn nút Power Off"], 1],
+    ["Câu 216: Biểu tượng tác động trên đối tượng để", ["Lật 900, 2700 (Rotate)", "Xoay đứng (Staked)", "Xoay ngang (Horizontal)", "Cả 3 lựa chọn trên đều đúng"], 4],
+    ["Câu 217: Chọn lựa nào có thể sắp xếp các slide trong tập tin .pptx", ["Normal", "Reading View", "Slide Sorter", "Notes page"], 3],
+    ["Câu 218: Chọn phát biểu đúng trong các câu sau:", ["Rom là bộ nhớ chỉ đọc", "RAM là bộ nhớ ngoài", "Đĩa mềm là bộ nhớ trong.", "Dữ liệu là thông tin chỉ đọc"], 1],
+    ["Câu 219: Trong soạn thảo Word, để lựa chọn toàn bộ một ô trong bảng, bạn sẽ", ["Nhấn chuột ở bên trên ô đó", "Bôi đen văn bản đang có trong ô đó", "Nhấn đúp chuột vào ô đó", "Nhấn chuột ở vị trí góc trái dưới của ô đó"], 4],
+    ["Câu 220: Trong bảng tính Excel, tại ô A2 có sẵn giá trị chuỗi “Tin học”; Ô B2 có giá trị số 2008. Tại ô C2 gõ vào công thức =A2+B2 thì nhận được kết quả?", ["#VALUE!", "Tin hoc2008", "2008", "2008Tin học"], 1],
+    ["Câu 221: Muốn áp dụng một hiệu ứng transition cho một tập tin trình chiếu bạn lựa chọn (Chọn nhiều lựa chọn)", ["Chọn một hiệu ứng transition bất kỳ \\ trong nhóm Timing chọn Apply To All", "Ctrl + A chọn tất cả slide, chọn một hiệu ứng transition bất kỳ", "Không thể thực hiện được", "Tất cả đều sai"], 1],
+    ["Câu 222: Trong bảng tính Excel, tại ô A2 có sẵn dữ liệu là dãy ký tự “Tin học văn phòng”; Tại ô B2 gõ vào công thức =LOWER(A2) thì nhận được kết quả?", ["Tin học văn phòng", "Tin Học Văn Phòng", "TIN HỌC VĂN PHÒNG", "tin học văn phòng"], 4],
+    ["Câu 223: Bộ phận nào sau đây thuộc bộ nhớ trong?", ["CPU", "Đĩa CDROM", "Bàn phím", "ROM"], 1],
+    ["Câu 224: Để xem nội dung thư mục với các thông tin mặc định: Name,Type, Size, Date modified …. Bạn chọn hiển thị", ["Show all.", "Detail", "Tiles", "List"], 2],
+    ["Câu 225: Từ Internet có nghĩa là:", ["Hệ thống mạng máy tính toàn cầu", "Hệ thống máy tính trong cùng 1 cơ quan", "Hệ thống địa chỉ mail", "Hệ thống mạng máy tính"], 1],
+    ["Câu 226: Phần mềm Microsoft Word cho phép thực hiện:", ["Cho phép canh đều 2 bên đoạn văn bản", "Cho phép soạn thảo văn bản Tiếng Việt", "Cho phép canh trái, canh phải, canh giữa đoạn văn bản", "Tất cả đều đúng"], 4],
+    ["Câu 227: Trong bảng tính Excel, giả sử ngày hệ thống của máy tính là: 3/18/2016; Khi đó tại ô A2 gõ vào công thức =Today()-1 thì nhận được kết quả là:", ["#NAME!", "03/17/2016", "#VALUE!", "Khác"], 2],
+    ["Câu 228: Trong các phần mềm sau, phần mềm nào là phần mềm ứng dụng?", ["Unix", "Microsoft Word", "Windows XP", "Linux"], 2],
+    ["Câu 229: Để chạy một ứng dụng trong Windows, bạn làm thế nào?", ["Start -\\ Run -\\ Nhập tên ứng dụng -\\ Enter", "Nhấp đúp vào biểu tượng", "Chuột phải lên biểu tượng -\\ Open", "Tất cả đều đúng"], 4],
+    ["Câu 230: Cho biết tên nào sau đây là tên hệ điều hành?", ["Windows 10", "Microsoft Office 2016", "UniKey", "Cả 3 lựa chọn trên điều đúng."], 1],
+    ["Câu 231: Phần mềm Microsoft Word có các chế độ nhập liệu:", ["Chế độ chèn ký tự (Insert)", "Chế độ thay ký tự (Overtype)", "Cả 2 câu a và b đều đúng", "Cả hai câu a và b đều sai"], 3],
+    ["Câu 232: Trong bảng tính Excel, để nhập vào công thức tính toán cho một ô, trước hết ta phải gõ:", ["Dấu hai chấm (: )", "Dấu đô la ($)", "Dấu bằng (= )", "Dấu chấm hỏi (?)"], 3],
+    ["Câu 233: Khi gửi mail địa chỉ của người nhận sẽ được điền vào trường nào?", ["Bcc", "Cc", "To", "Tất cả đều đúng"], 3],
+    ["Câu 234: Trong soạn thảo Word, nội dung của vùng header sẽ:", ["Được in ở cuối của mỗi trang ", "Được in ở bên trái của mỗi trang", "Được in ở đầu mỗi trang", "Được in ở bên phải của mỗi trang"], 3],
+    ["Câu 235: Trong soạn thảo Word, chỉ có một định dạng cho tập tin khi lưu đó là .docx:", ["Đúng", "Sai", "Có thể lưu .doc", "Không xác định"], 2],
+    ["Câu 236: Trong bảng tính Excel, khi gõ công thức xong, rồi Enter, máy hiện ra #REF! có nghĩa là:", ["Không tìm thấy giá trị dò tìm", "Không tìm thấy tên hàm", "Không tìm thấy địa chỉ tham chiếu", "Tất cả đều đúng"], 3],
+    ["Câu 237: Cho biết cách phục hồi tập tin khi bị xóa vào Recycle Bin:?", ["Vào Recycle Bin \\ chọn tập tin cần phục hồi \\ R_click chọn \\Delete", "Vào Recycle Bin \\ chọn tập tin cần phục hồi \\ R_click chọn \\Cut", "Vào Recycle Bin \\ chọn tập tin cần phục hồi \\ R_click chọn \\Restore", "Vào Recycle Bin \\ chọn tập tin cần phục hồi \\ R_click chọn \\ Properties"], 3],
+    ["Câu 238: Trong soạn thảo Word, để hiển thị trang sẽ in lên màn hình, ta chọn:", ["Page Layout – Print Preview", "Home – Print Preview", "File – Print", "File – Print Preview"], 4],
+    ["Câu 239: Trong Powerpoint, hiệu ứng Transition là:", ["Hiệu ứng chuyển động của đối tượng trên trang", "Hiệu ứng Trigger", "Hiệu ứng chuyển trang", "Các câu trên đều đúng"], 3],
+    ["Câu 240: Chọn lựa nào đúng về các loại mạng máy tính?", ["LAN – MAN -WAN.", "MAN – LAN -VAN – INTRANET.", "MAN – MEN -WAN – WWW.", "LAM – NAN -WAN – INTENET."], 1],
+    ["Câu 241: Trong bảng tính Excel, cho biết công thức đúng:", ["HLOOKUP(A7,$I$12:$L$15,2&2,FALSE)", "HLOOKUP(A7,$I$12:$L$15,2,FALSE)", "HLOOKUP(A7,$I$12:$L$15,0,2,FALSE)", "HLOOKUP(A7,$I$12:$L$15,2,2,FALSE)"], 2],
+    ["Câu 242: Hệ thống các chương trình đảm nhận chức năng làm môi trường trung gian giữa người sử dụng và máy tính được gọi là:", ["Các loại trình dịch trung gian", "Hệ điều hành", "Phần mềm", "Tất cả đều đúng."], 2],
+    ["Câu 243: Cho biết cách chỉnh ngày tháng năm trong Hệ điều hành Windows 7?", ["Vào Start \\Control panel \\ Data and Time \\ Change Time Zone", "Vào Start \\Control panel \\ Programs and Features \\ Change Data and Time", "Vào Start \\Control panel \\ Data and Time \\Change Data and Time", "Vào Start \\Control panel \\ Display \\ Change Data and Time"], 3],
+    ["Câu 244: Trong bảng tính Excel, tại ô D1 có công thức =A1+B1 vậy khi sao chép công thức này đến ô E3 thì công thức sẽ là", ["B3+C3", "B2+C2", "B4+C4", "B3+D3"], 1],
+    ["Câu 245: Dữ liệu là gì?", ["Là các thông tin được thể hiện dưới nhiều dạng khác nhau.", "Là khái niệm có thể được phát sinh, lưu trữ , tìm kiếm, sao chép, biến đổi…", "Là các số liệu hoặc là tài liệu cho trước chưa được xử lý.", "Tất cả đều đúng."], 3],
+    ["Câu 246: Trong soạn thảo Word, để tắt tính năng kiểu tra lổi chính tả trong word ta chọn:", ["File/options/add-ins/ when correcting spelling and grammar in word", "File/options/proofing/ bỏ chọn check spelling as you type", "File/options/save/ when correcting spelling and grammar in word", "Cả 3 câu hỏi trên điều đúng"], 2],
+    ["Câu 247: Khi đăng ký tài khoản mạng xã hội, diễn đàn, tài khoản để chơi game online… chọn lựa nào là sai", ["Bắt buộc có địa chỉ Email trên yahoo", "Bắt buộc có địa chỉ Email trên Gmail", "Không có địa chỉ Email cũng đăng ký được", "Bắt buộc có địa chỉ Email trên yahoo và Gmail"], 3],
+    ["Câu 248: Chọn công thức đúng?", ["IF(AND(C2<=8, C2>5), “Khá”,”Tb”)", "IF((C2<=8)AND(C2>5),”Khá”,”Tb”)", "IF((C2<=8)OR(C2>5),”Khá”,”Tb”,”Kém”)", "IF((C2<=8 & C2<5),”Khá”,”Tb”)"], 1],
+    ["Câu 249: Trong soạn thảo Word, để tô màu và đóng khung cho đoạn văn bản ta chọn công cụ:", ["Styles", "Border and Shading", "Paragraph", "Page setup"], 2],
+    ["Câu 250: Trong bảng tính Excel, khi thực hiện phép toán giữa 2 giá trị kiểu ngày và số sẽ cho kết quả là :", ["Số", "Cả ngày và số", "Ngày", "Tất cả đều sai"], 1],
+    ["Câu 251: Để thay đổi chủ đề (theme) cho 1 slide mà không làm ảnh hưởng đến các slide còn lại ta thực hiện:", ["Không thể thực hiện được", "Design – Themes – Kích chuột phải lên 1 mẫu theme – Apply to Matching Slides", "Design – Themes – Kích chuột phải lên 1 mẫu theme – Apply to Selected Slides", "Design – Themes – Kích chuột phải lên 1 mẫu theme – Apply to All Slides"], 3],
+    ["Câu 252: PowerPoint, hiệu ứng Exit là hiệu ứng:", ["Hiệu ứng giúp đối tượng xuất hiện trên màn hình trình chiếu", "Hiệu ứng giúp đối tượng trình diễn trên màn hình trình chiếu", "Hiệu ứng giúp đối tượng biến mất trên màn hình trình chiếu.", "Tất cả các phương án trên"], 3],
+    ["Câu 253: Để tạo nền cho slide trong powerpoint, ta làm bằng cách:", ["Dùng lệnh Format Background để thiết kế nền", "Trong thẻ Design, chọn Theme cho slide", "Cả 2 cách trên đều đúng", "Cả 2 cách trên đều sai"], 3],
+    ["Câu 254: Trong soạn thảo Word, muốn đánh dấu lựa chọn một từ, ta thực hiện:", ["Nháy chuột vào từ cần chọn", "Bấm phím Enter", "Bấm tổ hợp phím Ctrl – C", "Nháy đúp chuột vào từ cần chọn"], 4],
+    ["Câu 255: Muốn lấy 1 tệp từ Internet và lưu trữ trên máy cục bộ, sử dụng dịch vụ:", ["Hội thoại", "Tìm kiếm", "Thư điện tử", "Tải tệp tin"], 4],
+    ["Câu 256: Trong Windows, ở cửa sổ Explore, để chọn một lúc các tập tin hoặc thư mục nằm liền kề nhau trong một danh sách, bạn sử dụng:", ["Giữ phím Alt và nháy chuột vào từng mục muốn chọn trong danh sách", "Giữ phím Tab và nháy chuột vào từng mục muốn chọn trong danh sách", "Nháy chuột ở mục đầu, ấn và giữ Shift nháy chuột ở mục cuối", "Giữ phím Ctrl và nháy chuột vào từng mục muốn chọn trong danh sách"], 3],
+    ["Câu 257: Phần mềm mã nguồn mở là phần mềm:", ["Sử dụng phải tốn phí bản quyền.", "Do Microsoft phát hành.", "Người sử dụng có thể chỉnh sửa lại mã nguồn.", "Tất cả đều đúng."], 3],
+    ["Câu 258: Trên hệ điều hành Windows, để chuyển đổi cửa sổ chương trình cần làm việc ta:", ["Nháy vào một vị trí bất kỳ trên cửa sổ chương trình muốn kích hoạt.", "Nháy chọn biểu tượng chương trình tương ứng trên thanh công việc (Taskbar)", "Nhấn giữ phím Alt và gõ phím Tab cho đến khi chọn được cửa sổ chương trình.", "Các ý trên đều đúng."], 4],
+    ["Câu 259: Hãy cho biết đâu là phần mềm hệ thống (hệ điều hành)?", ["Windows 7", "Microsoft Office 2013", "UniKey", "Windows Media Player"], 1],
+    ["Câu 260: Muốn lấy 1 tệp từ Internet và lưu trữ trên máy cục bộ, sử dụng dịch vụ:", ["Thư điện tử", "Tìm kiếm", "Hội thoại", "Tải tệp tin"], 4],
+    ["Câu 261: Để định vị Taskbar trong trạng thái √ Lock Taskbar được định vị tùy ý ta chọn", ["Nhấn phải chuột vào Taskbar chọn Properties \\ tại dòng Taskbar location on screen \\chọn vị trí tùy ý", "Nhấn phải chuột vào Taskbar chọn Show Desktop.", "Taskbar định vị ở bottom là cố định không thể di chuyển.", "Dùng Chuột kéo thả Taskbar tùy ý trên 4 cạnh màn hình ."], 4],
+    ["Câu 262: Phần mềm nào dưới đây là chương trình soạn thảo văn bản?", ["Microsoft Excel", "Microsoft onenote", "Microsoft Word", "Microsoft Powerpoint"], 3],
+    ["Câu 263: Điều kiện để kết nối vào Internet qua đường dây điện thoại cố định là?", ["Phải có thuê bao điện thoại cố định.", "Phải có modem.", "Phải có máy tính.", "Cả 3 câu trên đều đúng."], 4],
+    ["Câu 264: Đơn vị đo dung lượng nào nhỏ nhất?", ["bit", "Kilobyte", "GhigaByte", "MegaBYte"], 1],
+    ["Câu 265: Tại một Slide hiện hành ta bấm phím delete ( trên bàn phím) lệnh này sẽ:", ["Thêm Slide", "Không thực hiện", "Thêm Slide hiện hành", "Xóa Slide hiện hành"], 4],
+    ["Câu 266: Trong soạn thảo Word, người dùng có thể:", ["Đánh số thứ tự của trang ở vùng Footer", "Đánh số thứ tự của trang ở vùng Header", "Cả a và b đều đúng", "Cả a và b đều sai"], 3],
+    ["Câu 267: Để xóa một tập tin hay thư mục không chuyển vào thùng rác (Recycle Bin), ta sử dụng tổ hợp phím kết hợp khi thực hiện xóa.", ["Ctrl+Delete.", "Alt+Delete.", "Alt+F4.", "Shift+Delete."], 4],
+    ["Câu 268: Trong soạn thảo Word, hộp thoại Page Setup có mục Gutter dùng để:", ["Chừa trống để đóng thành tập.", "Quy định lề của văn Bản", "Chia văn bản thành số đoạn theo ý muốn", "Quy định khoảng cách từ mép đến trang in"], 1],
+    ["Câu 269: Trong soạn thảo Word, để đóng ứng dụng ta dùng tổ hợp phím:", ["Alt + F4.", "Ctrl + A.", "Ctrl + F4.", "Cả 3 đều sai."], 1],
+    ["Câu 270: Trong Powerpoint muốn thêm 1 slide ta bấm tổ hợp phím nào:?", ["Ctrl + N", "Ctrl + P", "Ctrl + M", "Ctrl + L"], 3],
+    ["Câu 271: Trong Powerpoint, hiệu ứng Transition là:", ["Hiệu ứng Trigger", "Hiệu ứng chuyển trang", "Hiệu ứng chuyển động của đối tượng trên trang", "Các câu trên đều đúng"], 2],
+    ["Câu 272: Để khởi động Powerpoint, ta thực hiện lệnh nào sau đây:", ["Start \\ Run \\ gõ Powerpoint.exe \\ nhấn Enter", "Kích đúp chuột vào biểu tượng Microsoft Powerpoint trên màn hình", "Start \\ All Program \\ Microsoft Office \\ Microsoft Powerpoint", "Cả 3 lựa chọn trên điều đúng"], 4],
+    ["Câu 273: Để soạn thảo thư mới, chúng ta sử dụng nút?", ["Forward", "Relpy", "Compose", "Attactment"], 3],
+    ["Câu 274: Chọn phát biểu đúng về địa chỉ IP?", ["Địa chỉ IP dùng để xác định đối tượng nhận và gửi thông tin trên Internet.", "Là địa chỉ của trang web bất kỳ.", "Tất cả đều sai.", "Tất cả đều đúng"], 1],
+    ["Câu 275: Địa chỉ WebSite nào sau đây là không hợp lệ:", ["TrungTamTinHoc@T3h.vn", "T3h.vn", "hcmus.edu.vn", "tinhoctayviet.com"], 1],
+    ["Câu 276: Trong soạn thảo Word, tổ hợp phím nóng Ctrl + Shift + = dùng để:", ["Bật hoặc tắt chỉ số trên", "Bật hoặc tắt gạch dưới nét đôi", "Bật hoặc tắt chỉ số dưới", "Trả về dạng mặc định"], 1],
+    ["Câu 277: Để đảm bảo an toàn dữ liệu ta chọn cách nào?", ["Sao lưu dự phòng.", "Sử dụng User name – mật khẩu (Password).", "Firewall (Bức tường lửa).", "Cả 3 ý trên."], 4],
+    ["Câu 278: Trong bảng tính Excel, để chèn hình ảnh, ta thực hiện:", ["Thẻ Review \\ Picture", "Thẻ Insert \\ Picture", "Thẻ Fomulas \\ Picture", "Thẻ Data \\ Picture"], 2],
+    ["Câu 279: Sử dụng máy tính lâu dài sẽ gây ra bệnh nào?", ["Thận, Dạ dày, Tiểu đường.", "Tim, Phổi, Gan.", "Mắt, Khớp, Tâm thần.", "Cả 3 ý trên."], 3],
+    ["Câu 280: Trong nhóm công cụ Number trên thanh Ribbon Home của Excel, công cụ nào dùng để định dạng nhanh thể hiện phân cách số:", ["1", "2", "3", "4"], 1],
+    ["Câu 281: Phần mềm nào sau đây không phải là hệ điều hành máy tính?", ["Linux", "IOS", "Photoshop", "Windows"], 3],
+    ["Câu 282: Trong Powerpoint có thể tạo được nhiều hiệu ứng cho 1 đối tượng?", ["Chỉ tạo được 2 hiệu ứng", "Tạo được nhiều hiệu ứng", "Chỉ tạo được 3 hiệu ứng", "Không tạo được"], 2],
+    ["Câu 283: Hãy chỉ ra đơn vị lưu trữ của máy tính?", ["GHz", "Kg", "Km", "Byte"], 4],
+    ["Câu 284: Trong soạn thảo Word, để soạn thảo và định dạng văn bản như mẫu bạn sử dụng:", ["Định dạng Font, Tab và WordArt", "Textbox", "Bullets and Numbering", "Cả 3 lựa chọn trên"], 4],
+    ["Câu 285: Trong soạn thảo Word, khi làm việc với văn bản muốn in đậm nội dung văn bản đang chọn khối bạn bấm tổ phím:", ["Ctrl – A", "Ctrl – B", "Ctrl – C", "Ctrl – D"], 2],
+    ["Câu 286: Trong bảng tính Excel, để xuống dòng trong ô dữ liệu, ta dùng tổ hợp phím:", ["Alt + Enter", "Ctrl + D", "Shift +Enter", "Ctrl + EnTer"], 1],
+    ["Câu 287: Khái niệm hệ điều hành là gì ?", ["Nghiên cứu phương pháp, kỹ thuật xử lý thông tin bằng máy tính điện tử", "Cung cấp và xử lý các phần cứng và phần mềm", "Là một phần mềm chạy trên máy tính, dùng để điều hành, quản lý các thiết bị phần cứng và các tài nguyên phần mềm trên máy tính", "Nghiên cứu về công nghệ phần cứng và phần mềm"], 3],
+    ["Câu 288: Phần mềm soạn thảo văn bản Word cho phép:", ["Tạo Header and Footer", "Cho ký tự đầu tiên của đoạn văn thể hiện trên nhiều dòng (Dropcap)", "Chia cột", "Tất cả đều đúng"], 4],
+    ["Câu 289: Trong Powerpoint muốn tạo một hiệu ứng cho các đối tượng trong 1 slide, ta dùng lệnh lệnh nào sau đây:", ["Animations", "Nhấn nút Slide Show", "Tất cả đều đúng", "Tất cả đều sai"], 1],
+    ["Câu 290: Trong bảng tính Excel, khi thực hiện công thức thông báo lỗi nào sau đây cho biết người sử dụng nhập sai tên hàm hoặc chuỗi không đặt trong cặp dấu “ ”", ["#Div/0 !", "#Value!", "#Name?", "#REF!"], 3],
+    ["Câu 291: Trong Powerpoint có thể tạo được nhiều hiệu ứng cho 1 đối tượng?", ["Tạo được nhiều hiệu ứng", "Chỉ tạo được 3 hiệu ứng", "Chỉ tạo được 2 hiệu ứng", "Không tạo được"], 1],
+    ["Câu 292: Trong bảng tính Excel, để gom 2 ô thành 1 ô, ta thực hiện:", ["Thẻ Home/Conditional formatting.", "Thẻ Home/Wrap text", "Thẻ Home/Merge & center", "Thẻ Home/Format as table"], 3],
+    ["Câu 293: Cho biết cách chỉnh ngày tháng năm trong Hệ điều hành Windows 7", ["Vào Start \\Control panel \\ Display \\ Change Data and Time", "Vào Start \\Control panel \\ Data and Time \\ Change Time Zone", "Vào Start \\Control panel \\ Data and Time \\Change Data and Time", "Vào Start \\Control panel \\ Programs and Features \\ Change Data and Time"], 3],
+    ["Câu 294: Việc tải file dữ liệu từ internet bị chậm là do nguyên nhân, bạn sử dụng lựa chọn nào?", ["File có dung lượng lớn", "Đường truyền internet tốc độ thấp", "Server cung cấp dịch vụ internet bị quá tải", "Cả 3 ý trên đều đúng"], 4],
+    ["Câu 295: Muốn mở một tập tin đã tồn tại trên đĩa ngay sau khi khởi động powerpoint ta nhấn tổ hợp phím?", ["Ctrl+X", "Ctrl+P", "Ctrl+Q", "Ctrl+O"], 4],
+    ["Câu 296: Trong soạn thảo Word, cho biết các định dạng chữ gạch đôi ở giữa chữ : TRUNG TÂM TIN HỌC được làm bằng cách:", ["Insert \\ Links \\ Cross-reference \\ First line", "Insert \\ Text \\ Text box \\ First line", "Home \\ Paragraph \\ Special \\ Double Strikethrough", "Home \\ Format Font \\Double Strikethrough"], 4],
+    ["Câu 297: Chọn phát biểu đúng trong các câu sau:", ["Rom là bộ nhớ chỉ đọc", "Dữ liệu là thông tin chỉ đọc", "Đĩa mềm là bộ nhớ trong.", "RAM là bộ nhớ ngoài"], 1],
+    ["Câu 298: Nhìn vào các tham số cấu hình của một máy tính: 1.8GHz, 20GB, 1GB con số 20GB là thông số gì?", ["Tốc độ vòng quay của ổ cứng", "Dung lượng của ổ đĩa cứng", "Tốc độ xử lý của CPU.", "Dung lượng của đĩa CD mà máy có thể đọc được"], 2],
+    ["Câu 299: Để máy tính có thể làm việc hệ điều hành được cài đặt ở đâu?", ["Ổ đĩa cứng", "Ram", "Rom", "Tất cả đều sai"], 1],
+    ["Câu 300: Phải giữ phím nào khi thao tác chọn nhiều file không liên tục trong cùng một thư mục?", ["Shift", "Alt", "Ctrl", "Tab"], 3],
+    ["Câu 301: Khi nhập dữ liệu vào bảng tính Excel thì đáp án nào sau đây đúng?", ["Dữ liệu kiểu thời gian sẽ mặc định căn lề trái", "Dữ liệu kiểu ký tự sẽ mặc định căn lề trái", "Dữ liệu kiểu ngày tháng sẽ mặc định căn lề trái.", "Dữ liệu kiểu số sẽ mặc định căn lề trái"], 2],
+    ["Câu 302: Địa chỉ nào sau đây không phải là địa chỉ mail?", ["mtthu@gmail.com", "Hongloan@tu.hcums.edu.vn", "thuhong.vn", "ktthuong@yahoo.com"], 3],
+    ["Câu 303: Trong bảng tính Excel, công thức sau : = ROUND(136485.22,-3) sẽ cho kết quả là :", ["137000", "136000", "137,000.22", "136,000.22"], 2],
+    ["Câu 304: Trong soạn thảo Word, để soạn thảo và định dạng văn bản như mẫu bạn sử dụng:", ["Chia cột", "Bullets and Numbering", "Chèn hình và WordArt", "Cả 3 lựa chọn trên"], 4],
+    ["Câu 305: Phần mở rộng của bài trình chiếu PowerPoint 2010 là:", ["PPTX", "POP", "POW", "PPP"], 1],
+    ["Câu 306: Phần mềm nào sau đây không phải trình duyệt Web?", ["Mozilla Firefox", "Unikey", "Netcape", "Microsoft"], 2],
+    ["Câu 307: Trong Windows Explorer, chức năng của nhóm ứng dụng Dùng để tùy chọn cách hình thức :", ["Hiển thị thư mục trên 1 cấp.", "Hiển thị thông tin ổ đĩa mềm.", "Hiện thị màn hình nền.", "Hiển thị thông tin thư mục đang được chọn."], 4],
+    ["Câu 308: Trong Windows Explorer, muốn sửa đổi tên của một thư mục, tập tin ta nhấp phải chuột trên thư mục, tập tin đó và chọn:", ["Properties", "Create shortcut", "Rename", "Search"], 3],
+    ["Câu 309: Cho biết phần mềm nào dùng để hiển thị nội dung trang Web?", ["Micosoft Publisher", "Micosoft Word", "Micosoft Excel", "Tất cả các đáp án trên đều sai"], 4],
+    ["Câu 310: Thiết bị nhập chuẩn bao gồm gì, bạn sử dụng lựa chọn nào?", ["Màn hình, máy in", "Bàn phím, máy in", "Máy in, chuột", "Chuột, bàn phím"], 4],
+    ["Câu 311: Chọn phát biểu đúng về Email", ["Là hình thức hội thoại trực tiếp trên Internet.", "Là dịch vụ cho phép ta truy cập đến hệ thống máy tính khác trên mạng.", "Là dịch vụ cho phép ta gởi và nhận thư điện tử.", "Là phương thức truyền tập tin từ máy này đến máy khác trên mạng."], 3],
+    ["Câu 312: Trong soạn thảo Word, nội dung của vùng header sẽ:", ["Được in ở cuối của mỗi trang", "Được in ở bên trái của mỗi trang", "Được in ở bên phải của mỗi trang", "Được in ở đầu mỗi trang"], 4],
+    ["Câu 313: Chức năng nào dưới đây có thể nhìn thấy các máy tính trong mạng nội bộ?", ["My Computer", "My Documents", "Control Panel", "My Network"], 4],
+    ["Câu 314: FireFox là:", ["Bộ giao thức", "Trình duyệt web dùng để hiển thị các trang web trên Internet", "1 chuẩn mạng cục bộ", "Thiết bị kết nối các mạng"], 2],
+    ["Câu 315: Cửa sổ Excel thuộc loại:", ["Cửa sổ tư liệu.", "Cửa sổ thư mục.", "Cửa sổ ứng dụng", "Tất cả đều đúng."], 3],
+    ["Câu 316: Thao tác chọn File \\Close dùng để", ["Đóng tập tin hiện tại", "Lưu tập tin hiện tại", "Thoát khỏi Powerpoint", "Mở một tập tin nào đó"], 1],
+    ["Câu 317: Trong trình duyệt web, ý nghĩa nút Home trên cửa sổ trình duyệt, bạn sử dụng lựa chọn nào?", ["Đưa bạn về trang chủ của website mà bạn đang xem", "Đưa bạn đến với trang khởi động mặc định", "Đưa bạn về trang trắng không có nội dung", "Đưa bạn trở về trang web có địa chỉ https://www.google.com.vn"], 2],
+    ["Câu 318: Trong soạn thảo Word, để soạn thảo và định dạng văn bản như mẫu bạn sử dụng:", ["Định dạng Font và WordArt", "Định dạng Tab và Dropcap", "Chèn hình và chia cột", "Cả 3 lựa chọn trên"], 4],
+    ["Câu 319: Trong soạn thảo Word, để tạo chỉ số dưới như ví dụ H2O ta bấm tổ hợp phím:", ["Bấm Ctrl + =", "Bấm Ctrl + Shift + =", "Bấm Ctrl + Alt + =", "Bấm Alt + Shift + ="], 1],
+    ["Câu 320: Địa chỉ email như thế nào là hợp lệ", ["Địa chỉ phải tồn tại duy nhất trên internet", "Trong địa chỉ email phải có ký tự @", "Cả 2 ý trên", "Cả 3 câu trên đều sai"], 3],
+    ["Câu 321: Hệ điều hành là gì ?", ["Phần mềm quản lý.", "Phần mềm ứng dụng.", "Phần mềm công cụ.", "Phần mềm hệ thống."], 4],
+    ["Câu 322: Trong bảng tính Excel, khi ta nhập công thức sau : = LEN(TRIM(“ABCDEF ”)), kết qua sẽ là:", ["7", "6", "0", "9"], 2],
+    ["Câu 323: Phần mềm nào sau đây dùng để diệt Virus?", ["BKAV", "Microsoft Office", "Photoshop", "Media"], 1],
+    ["Câu 324: Theo bạn kí hiệu MB viết tắt của từ gì?", ["Gigabit", "Megabit", "Megabyte", "Gigabyte"], 3],
+    ["Câu 325: Cách thức để mở 1 trang web sử dụng", ["Nhập url của trang web vào ô Address rồi nhấn Enter.", "Chọn File -\\ Open rồi nhập url của trang web rồi nhấn Enter.", "Cả 2 câu trên đều đúng.", "Cả 2 câu trên đều sai."], 1],
+    ["Câu 326: Trong soạn thảo Word, công cụ (Decrease Indent) dùng để:", ["Xóa các ký tự trong văn bản từ bên phải qua trái", "Xóa các dòng trong văn bản từ bên phải qua trái", "Tăng lề trái của văn bản", "Giảm lề trái của văn bản"], 4],
+    ["Câu 327: Sử dụng chương trình nào của Windows để quản lí các tệp và thư mục?", ["Windows Explorer", "Accessories", "Microsoft Office", "Control Panel"], 1],
+    ["Câu 328: Nêu cách tạo một thư mục trong ổ đĩa D của máy tính?", ["R_click vào vùng trống trong ổ đĩa D \\ New \\ Shortcut \\ New \\ Folder", "R_click vào vùng trống trong ô đĩa D \\ View \\Tiles \\ New \\ Folder", "R_click vào vùng trống trong ô đĩa D \\ View \\ List \\ New \\ Folder", "R_click vào vùng trống trong ổ đĩa D \\ New \\ Folder"], 4],
+    ["Câu 329: Để tạo hiệu ứng cho các đối tượng trong slide, thực hiện:", ["Transitions \\ Transition to This Slide, sau đó chọn kiểu hiệu ứng mong muốn", "Slide Show \\ Custom Shows, sau đó chọn kiểu hiệu ứng mong muốn.", "Animations \\ Animation, sau đó chọn kiểu hiệu ứng mong muốn", "Tất cả các phương án trên đều sai"], 3],
+    ["Câu 330: Trong Powerpoint có những dạng hiển thị nào sau đây?", ["Tất cả đáp án trên đều đúng", "Notes page", "Slide Sorter", "Normal"], 1],
+    ["Câu 331: Trong bảng tính Excel, để ẩn cột, ta thực hiện:", ["Thẻ Data / Cells / Format / Hide&Unhide / Hide Columns", "Thẻ Fomulas / Cells / Format / Hide&Unhide / Hide Columns", "Thẻ View / Cells / Format / Hide&Unhide / Hide Columns.", "Thẻ Home /Cells / Format / Hide&Unhide / Hide Columns"], 4],
+    ["Câu 332: Trong Powerpoint muốn xóa một slide, ta dùng lệnh nào sau đây?", ["Edit\\ Delete Slide", "File\\ Delete Slide", "Ý 1 và 2 đều đúng", "Cả 3 ý trên đều sai"], 4],
+    ["Câu 333: Công dụng của thư điện tử (Email) là gì?", ["Gửi thư điện tử", "Gửi thư quảng cáo qua mạng", "Gửi dữ liệu qua mạng", "Tất cả đáp án trên đều đúng"], 4],
+    ["Câu 334: Để tạo nền cho slide trong powerpoint, ta làm bằng cách:", ["Trong thẻ Design, chọn Theme cho slide", "Dùng lệnh Format Background để thiết kế nền", "Cả 2 cách trên đều đúng", "Cả 2 cách trên đều sai"], 3],
+    ["Câu 335: Trong soạn thảo Word, muốn tắt đánh dấu khối văn bản (tô đen) ta thực hiện:", ["Bấm phím Enter", "Bấm phím Space", "Bấm phím Caps Lock", "Tất cả đều sai"], 4],
+    ["Câu 336: Trong email cho đính kèm tập tin (tệp) khi gửi dung lượng tối là bao nhiêu:?", ["Tối đa là 10M (Mega byte)", "Tối đa là 100M (Mega byte)", "Tối đa là 25M (Mega byte)", "Bao nhiều cũng được ( vô hạn )"], 3],
+    ["Câu 337: Trong ứng dụng Windows Explorer, để chọn nhiều tập tin hay thư mục liên tục ta thực hiện thao tác kết hợp phím … với Click Mouse", ["Ctrl", "Shift", "Alt", "Tab"], 2],
+    ["Câu 338: Phần mềm nào có thể soạn thảo văn bản với nội dung và định dạng như sau:", ["Notepad & Microsoft Word", "Notepad, WordPad và Microsoft Word", "Notepad, WordPad và Microsoft Word", "WordPad & Microsoft Word"], 4],
+    ["Câu 339: Serial Number là của phần mềm là:", ["Mã hóa đơn khi mua phần mềm", "Dãy số dùng để kích hoạt phần mềm có trả phí", "Dãy số nhận diện phần mềm", "Tất cả đều đúng"], 2],
+    ["Câu 340: Linux là gì?", ["Một chương trình xử lí ảnh", "Một thiết bị phần cứng", "Một chương trình soạn thảo và gửi mail", "Một hệ điều hành"], 4],
+    ["Câu 341: Trong soạn thảo Word, muốn chèn hình ảnh cho văn bản bạn thực hiện:", ["Home \\ Shading", "Insert \\ Picture", "Page Layout \\ Page Color", "View \\ Zoom"], 2],
+    ["Câu 342: Khi gán 1 hiệu ứng loại “Exit” cho đối tượng A trên slide, lúc mới trình chiếu chưa thao tác gì cả thì:", ["Đối tượng A không xuất hiện", "Đối tượng A xuất hiện và biến mất", "Đối tượng A đã xuất hiện", "Tất cả đều sai"], 3],
+    ["Câu 343: Bạn mở bộ gõ tiếng Việt (Unikey) để soạn thảo. Bạn lựa chọn kiểu gõ Telex và bảng mã Unicode, khi đó bạn cần chọn nhóm font chữ nào trong các font chữ sau để gõ được dấu tiếng Việt:", ["Vn-Times, .vn Arial, .vn Courier", "Tahoma, Arial, Times new Roman.", "Vn-Times, Times new roman", "VNI-Times, Arial, .Vn Avant"], 2],
+    ["Câu 344: Muốn dùng một hình ảnh nào đó trong đĩa làm nền cho các Slide trong giáo án điện tử , sau khi chọn Design \\ Background Style \\ Format Background \\ Fill ta chọn:", ["Solid fill", "Picture or texture fill", "Pattern fill", "Gradient fill"], 2],
+    ["Câu 345: Mô hình hệ thống mở (OSI) có mấy tầng?", ["4 tầng", "5 tầng", "7 tầng", "3 tầng"], 3],
+    ["Câu 346: Phát biểu nào sau đây là sai ?", ["Nút Back để đóng cửa sổ trình duyệt.", "Mở nhiều cửa sổ duyệt web cho nhiều địa chỉ web khác nhau.", "Vừa mở cửa sổ duyệt web, vừa chơi game trong lúc chờ trang web xuất hiện đầy đủ nội dung.", "Nút F5 là để bắt đầu lại quá trình tải trang web từ máy phục vụ về máy cá nhân."], 1],
+    ["Câu 347: Phần mềm nào là phần mềm ứng dụng?", ["Microsoft Powerpoint", "Microsoft Word.", "Microsoft Excel.", "Cả 3 ý trên."], 4],
+    ["Câu 348: Trong soạn thảo Word, để mở thanh thước bạn thực hiện:", ["View/Ruler", "Navigation Pane.", "Gridlines", "Cả 3 đều sai."], 1],
+    ["Câu 349: Ý nghĩa Shortcut trong Windows?", ["Quản lý tập tin, thư mục", "Phần mềm hệ điều hành", "Tạo đường tắt để truy cập nhanh", "Tất cả đáp án trên đều sai"], 3],
+    ["Câu 350: “www.goccay.vn”. “vn” trên địa chỉ trang web có nghĩa là:", ["Ký hiệu tên nước Việt Nam", "Một ký hiệu nào đó", "Cả 2 đều sai", "Cả 2 đều đúng"], 1],
+    ["Câu 351: Thiết bị nào không phải là thiết bị ngoại vi?", ["Màn hình.", "Mouse", "CPU", "Bàn phím."], 3],
+    ["Câu 352: Trong soạn thảo Word, thao tác Shift + Enter có chức năng:", ["Nhập dữ liệu theo hàng dọc", "Xuống hàng nhưng không kết thúc paragraph", "Xuống một trang màn hình", "Tất cả đều sai"], 2],
+    ["Câu 353: Trong Windows Explorer, muốn xem hoặc thay đổi thuộc tính của một thư mục, tập tin ta nhấp phải chuột trên thư mục, tập tin đó và chọn:", ["Rename", "Create shortcut", "Properties", "Search"], 3],
+    ["Câu 354: Thao tác chọn File \\Close dùng để", ["Lưu tập tin hiện tại", "Đóng tập tin hiện tại", "Mở một tập tin nào đó", "Thoát khỏi Powerpoint"], 2],
+    ["Câu 355: TCP/IP là", ["1 thiết bị mạng", "1 phần cứng", "1 phần mềm", "1 bộ giao thức"], 4],
+    ["Câu 356: Trong bảng tính Excel, công thức =COUNTA(10,”C”,15) cho kết quả là:", ["3", "Báo lỗi", "2", "1"], 1],
+    ["Câu 357: Trong Powerpoint muốn đánh số trang cho từng Slide ta dùng lệnh nào sau đây:", ["Insert \\ Text \\ Slide Number.", "Format \\ Bullets and Number.", "Insert\\ Bullets and Numbering", "Các câu trên đều sai"], 1],
+    ["Câu 358: Thiết bị thường dùng để kết nối các mạng internet", ["Usb", "Router", "Cáp", "Cả 3 đều đúng"], 2],
+    ["Câu 359: Trong bảng tính Excel, khi chọn trong mục Edit/ Paste Special chỉ mục Comments dùng để:", ["Chép định dạng", "Chép giá trị trong ô", "Chép bề rộng ô", "Chép ghi chú"], 4],
+    ["Câu 360: Trong bảng tính Excel, để chèn hình ảnh, ta thực hiện?", ["Thẻ Insert \\ Picture", "Thẻ Data \\ Picture", "Thẻ Fomulas \\ Picture", "Thẻ Review \\ Picture"], 1],
+    ["Câu 361: Nhìn hình chụp, cho biết bộ nhớ trong của máy tính là bao nhiêu GB?", ["Xấp xỉ 1 GB", "Xấp xỉ 4.5 GB", "Xấp xỉ 3 GB", "Xấp xỉ 2 GB"], 1],
+    ["Câu 362: Để đọc nhanh dữ liệu trên mỗi mặt hàng thì mỗi siêu thị đều có thiết bị này đặt ở quầy thu ngân. Thiết bị đó gọi là …?", ["Lưu trữ (ổ cứng)", "Thiết bị xuất (máy in)", "Thiết bị nhập (máy quét mã vạch)", "Thiết bị xuất (máy chiếu)"], 3],
+    ["Câu 363: Trong Powerpoint, có thể ẩn đi 1 slide trong khi trình chiếu không?", ["Không thể ẩn đi slide đã tạo ra", "Được, bằng cách delete slide đó đi", "Được, bằng cách chọn lệnh Hide Slide trong thẻ Slide show", "Được, bằng cách chọn lệnh Hide Slide trong thẻ Design"], 3],
+    ["Câu 364: Chọn lựa nào đúng về các loại mạng máy tính?", ["MAN – LAN -VAN – INTRANET.", "MAN – MEN -WAN – WWW.", "LAM – NAN -WAN – INTENET.", "LAN – MAN -WAN."], 4],
+    ["Câu 365: Khi đang trình chiếu, muốn chuyển từ slide hiện hành đến slide kế tiếp như thế nào?", ["Không thể thực hiện được", "Nhấn Phím Shift", "Nhấn Esc", "Nhấn phím Enter"], 4],
+    ["Câu 366: Cho biết cú pháp tìm kiếm tập tin có kiểu .doc trên Google?", ["<Nội dung> Type:doc", "Type:doc <Nội Dung>", "<Nội dung> Filetype:doc", "Filetype:*.doc <Nội Dung>"], 3],
+    ["Câu 367: Internet Explorer là gì?", ["Thiết bị kết nối các mạng", "Bộ giao thức", "Một chuẩn mạng cục bộ", "Trình duyệt web dùng để hiển thị các trang web trên Internet"], 4],
+    ["Câu 368: Trong soạn thảo Word, muốn di chuyển từ ô này sang ô kế tiếp trong Table bạn dùng phím?", ["Tab", "ESC", "Enter", "Ctrl"], 1],
+    ["Câu 369: Trong soạn thảo Word, để thay đổi hướng trang giấy in trong Word 2010 ta chọn thẻ Page Layout, chọn lệnh…?", ["Page Setup.", "Size", "Margins", "Orientation"], 4],
+    ["Câu 370: Trong soạn thảo Word, muốn trình bày văn bản theo hướng giấy ngang, chọn mục?", ["Direction \\ Orientation \\ Portrait", "Direction \\ Orientation \\ Landscape", "Page Layout \\ Orientation \\ Landscape", "Page Layout \\ Orientation \\ Portrait"], 3],
+    ["Câu 371: Trong soạn thảo Word, để tô màu và đóng khung cho đoạn văn bản ta chọn lệnh?", ["Paragraph", "Borders and Shading", "Page setup", "Styles"], 2],
+    ["Câu 372: Các kiểu dữ liệu thông dụng của Excel là …?", ["Kiểu chuỗi, kiểu văn bản, kiểu ngày tháng", "Kiểu chuỗi, kiểu số, kiểu ngày tháng, kiểu công thức", "Kiểu công thức, kiểu hàm, kiểu số, kiểu ngày tháng", "Kiểu số, kiểu lôgic, kiểu ngày tháng"], 2],
+    ["Câu 373: 1 slide có tối đa bao nhiêu hiệu ứng Transition?", ["2 hiệu ứng", "Rất nhiều", "3 hiệu ứng", "1 hiệu ứng"], 4],
+    ["Câu 374: Trong hệ điều hành Windows, muốn khôi phục đối tượng trong Recycle Bin, chọn lệnh nào?", ["chọn Edit và Delete.", "chọn Edit và Restore.", "chọn File và Delete.", "chọn File và Restore."], 4],
+    ["Câu 375: Trong các dạng địa chỉ sau đây, địa chỉ nào là địa chỉ tuyệt đối cột, tương đối dòng?", ["B$1", "B$1$$10$D", "$B1:$D10", "$B$1:$D$10"], 3],
+    ["Câu 376: Để tạo hiệu ứng cho các đối tượng trong Slide?", ["Slide Show / Custom Shows, sau đó chọn kiểu hiệu ứng mong muốn.", "Slide Show /Custom Animation, sau đó chọn kiểu hiệu ứng mong muốn", "Animations / Animation / chọn kiểu hiệu ứng", "Slide Show /Slide Transition, sau đó chọn kiểu hiệu ứng mong muốn"], 3],
+    ["Câu 377: Trong Windows, để thiết lập cách nhập và hiển thị ngày theo định dạng Việt Nam, ta chọn mục nào sau đây?", ["Control Panel \\ Formats", "Control Panel \\ Formats", "Control Desktop \\ Fomats \\ Date and Time", "Control Panel \\ Region and Language \\ Formats"], 4],
+    ["Câu 378: Công cụ tìm kiếm phổ biến trên Internet hiện này ở Việt Nam là gì?", ["Google", "Answer", "Yahoo", "Cốc Cốc"], 1],
+    ["Câu 379: Trong Windows Explorer, muốn sửa đổi tên một thư mục, tập tin như thế nào?", ["Click trái lên đối tượng \\ Create shortcut", "Click phải lên đối tượng \\ Search", "Click phải lên đối tượng chọn \\ Rename", "Click phải chuột lên đối tượng chọn \\ Properties"], 3],
+    ["Câu 380: Trong bảng tính Excel, để giữ cố định dòng hoặc cột trong bảng tính, thực hiện thế nào?", ["Thẻ Review/Freeze Panes mited", "Thẻ Home/Freeze Panes.", "Thẻ View/Freeze Panes", "Thẻ Page Layout/Freeze Panes"], 3],
+    ["Câu 381: Trong Powerpoint có thể tạo được nhiều hiệu ứng cho 1 đối tượng?", ["Không tạo được", "Tạo được nhiều hiệu ứng", "Chỉ tạo được 3 hiệu ứng", "Chỉ tạo được 2 hiệu ứng"], 2],
+    ["Câu 382: Cho biết bit là … ?", ["đơn vị lớn nhất của thông tin được sử dụng trong máy tính", "một đơn vị đo nguồn điện.", "đơn vị nhỏ nhất biểu diễn thông máy tính", "đơn vị đo tốc độ xử lý thông tin máy tính."], 3],
+    ["Câu 383 Khi làm việc trên một dự án của trường học, việc chia sẻ thông tin thu thập được từ nhiều nguồn khác nhau thông qua một bài thuyết trình trực tuyến là một ví dụ của…?", ["Thu thập thông tin", "Đánh giá thông tin", "Tổ chức thông tin", "Trao đổi thông tin (communicating information)"], 4],
+    ["Câu 384: Trong bảng tính Excel, để định dạng chữ đậm cho dữ liệu, ta dùng tổ hợp phím nào?", ["Ctrl + C", "Ctrl + B", "Ctrl + D", "Ctrl + A"], 2],
+    ["Câu 385: Trong các nhóm kí tự sau đây nhóm ký tự nào không được sử dụng để đặt tên của tập tin và thư mục?", ["~, “, @, #, $/, \\,*,<, >", "@, 1, %", "–", "(,)"], 1],
+    ["Câu 386: Chọn một trong những phát biểu đúng về tên miền (Domain Name)?", ["Tên của một máy tính cá nhân", "Tên của một máy chủ", "Tên gọi để ánh xạ về một địa chỉ IP", "Tên của một trang mạng"], 3],
+    ["Câu 387: Trong soạn thảo Word, để thiết lập Font chữ mặc định trong word áp dụng cho mọi tập tin khi tạo mới?", ["Tổ hợp phím Ctrl+F1, Set as default, All documents based on the normal.dotm template", "Tổ hợp phím Ctrl+D, Set as default, All documents based on the normal.dotm template", "Tổ hợp phím Ctrl+P, Set as default, this document only", "Tổ hợp phím Ctrl+I, Set as default, All documents based on the normal.dotm template"], 2],
+    ["Câu 388: Trong soạn thảo Word, muốn di chuyển từ ô này sang ô kế tiếp trong Table bạn dùng phím?", ["Tab", "ESC", "Ctrl", "Enter"], 1],
+    ["Câu 389: Khi đang trình chiếu, muốn chuyển từ slide hiện hành đến slide kế tiếp như thế nào?", ["Nhấn Esc", "Nhấn phím Enter", "Nhấn Phím Shift", "Không thể thực hiện được"], 2],
+    ["Câu 390: Trong Powerpoint, có thể ẩn đi 1 slide trong khi trình chiếu không?", ["Được, bằng cách chọn lệnh Hide Slide trong thẻ Slide show", "Được, bằng cách delete slide đó đi", "Được, bằng cách chọn lệnh Hide Slide trong thẻ Design", "Không thể ẩn đi slide đã tạo ra"], 1],
+    ["Câu 391: Internet Explorer là gì?", ["Một chuẩn mạng cục bộ", "Trình duyệt web dùng để hiển thị các trang web trên Internet", "Thiết bị kết nối các mạng", "Bộ giao thức"], 2],
+    ["Câu 392: Vùng nhớ để lưu tạm thời dữ liệu và dữ liệu sẽ mất đi khi tắt máy tính, nó được gọi là …?", ["RAM", "HĐ", "USB", "ROM"], 1],
+    ["Câu 393: Trình tự xử lý thông tin của máy tính điện tử là…?", ["Màn hình \\ CPU \\ Đĩa Cứng", "Đĩa cứng \\ Màn hình \\CPU", "Màn hình \\ Máy in \\ CPU", "Nhận thông tin \\ Xử lý thông tin \\ Xuất thông tin"], 4],
+    ["Câu 394: Để tạo một Slide chủ chứa các định dạng chung của toàn bộ các Slide trong bài trình diễn, để thực hiện?", ["Insert / Slide Master", "View / Master Slide", "View / Slide Master", "Insert / Master Slide"], 3],
+    ["Câu 395: Trong soạn thảo Word, tổ hợp phím Ctrl + Z dùng để?", ["Hủy thao tác vừa làm", "Lùi về vị trí trước", "Thực hiện lại thao tác", "Lưu văn bản"], 1],
+    ["Câu 396: Trong soạn thảo Word, để dãn khoảng cách giữa các dòng là 1.5 line trong một đoạn thực hiện thế nào?", ["Ctrl + Shift +5", "Ctrl + Shift + Q", "Ctrl +Shift +P", "Ctrl + 5"], 4],
+    ["Câu 397: Sau khi kiểm tra email thì mạng không kết nối được. Vậy bạn vẫn có thể thực hiện hoạt động nào trên Internet?", ["Soạn thảo email", "Gửi email", "Đính kèm tập tin vào email", "In trên máy in sử dụng chung cài đặt ở máy khác"], 1],
+    ["Câu 398: Muốn dùng một hình ảnh làm nền cho các Slide trong giáo án điện tử, sau khi chọn Design / Background Style / Format Background / Fill ta chọn?", ["Solid fill", "Gradient fill", "Picture or texture fill", "Pattern fill"], 3],
+    ["Câu 399: Macro Virus là …?", ["Một loại virus tin học chủ yếu lây lan vào các bộ trữ điện", "Virus được tạo ra từ các phần mềm ứng dụng như Microsoft Word, Microsoft Excel", "Loại viurs tin học chủ yếu lây lan vào các mẫu tin khởi động (Boot record)", "Loại virus tin học chủ yếu lây lan vào các tập tin của Word và Excel"], 2],
+    ["Câu 400: Trong soạn thảo Word, khi đặt con trỏ bất kì vào vị trí nào đó trong đoạn văn bản, sau đó vào Home/ Paragraph/ Shading (Shading) và chọn màu xanh thì …?", ["Chỉ có chữ ngay tại còn trỏ có mà xanh", "Dòng tại vị trí con trỏ sẽ được tô nền xanh", "Không có tác dụng gì cả", "Toàn bộ đoạn văn bản tại vị trí con trỏ sẽ được tô nền xanh"], 4],
+    ["Câu 401: Để xem tên của máy tính (Computer Name), chương trình nào được dùng?", ["exe", "txt", "xlsx", "docx"], 1],
+    ["Câu 402: WWW là viết tắt như thế nào?", ["World Width Web", "World Wild Web", "World Wide Web", "Word Wi Web"], 3],
+    ["Câu 403: Website là gì?", ["Hình thức trao đổi thông tin dưới dạng thư thông qua hệ thống mạng máy tính", "Các file đã được tạo ra bởi Word, Excel, PowerPoint… rồi chuyển sang dạng html", "Một ngôn ngữ siêu văn bản", "Trang mạng, tập hợp các trang web con, chạy online trên đường truyền internet"], 4],
+    ["Câu 404: Để nén một tập tin hay thư mục ta dùng phần mềm nào?", ["Winrar", "Windows", "WinXp", "Win98"], 1],
+    ["Câu 405: Trong Powerpoint để thêm một Slide thế nào?", ["Design / New Slide", "View / New Slide", "Home / New Slide", "Insert / New Slide"], 3],
+    ["Câu 406: Trong bảng tính Excel, tại ô A2 có giá trị số 25; Tại ô B2 gõ vào công thức =SSUM(A2) thì nhận được kết quả gì…?", ["#VALUE!", "0", "#NAME!", "5"], 3],
+    ["Câu 407: Trong bảng tính Excel, giả sử ngày hệ thống của máy tính là: 3/18/2016; Khi đó tại ô A2 gõ vào công thức =Today()-1 thì nhận được kết quả là …?", ["#NAME!", "#VALUE!", "0", "03/17/2016"], 4],
+    ["Câu 408: Chọn biết cách gỡ bỏ một ứng dụng trong Hệ điều hành Windows 7?", ["Start \\ Control panel \\ Programs and Features \\ Chọn ứng dụng cần bỏ \\ Organize", "Start \\Control panel \\ Programs and Features \\ Chọn ứng dụng cần bỏ \\ Uninstall \\Ok", "Start \\ Control panel \\ Programs and Features \\ Chọn ứng dụng cần bỏ \\ Repair", "Start \\ Control panel \\ Fonts \\ Chọn Font bất kỳ \\ Delete \\Ok"], 2],
+    ["Câu 409: Chọn lựa nào có thể sắp xếp các slide trong tập tin .pptx", ["Slide Sorter", "Normal", "Reading View", "Notes page"], 1],
+    ["Câu 410: Trong soạn thảo Word, ở chế độ thiết kế bảng (Table) chức năng nào trong nhóm Table Tools – Layout dùng để căn chỉnh độ rộng các cột được chọn có độ rộng bằng nhau?", ["Click chọn biểu tượng (Distributed Rows) trong nhóm Cell Size.", "Click chọn biểu tượng (AutoFit) trong nhóm Cell Size.", "Click chọn biểu tượng (Distributed Columns) trong nhóm Cell Size.", "Click chọn biểu tượng (Split Table) trong nhóm Merge."], 3],
+    ["Câu 411: Trong bảng tính Excel, ô A1 chứa giá trị 15, B1 chứa giá trị 0. Tại D1 ta lập công thức = A1/B1 thì nhận được kết quả?", ["0", "#VALUE!", "#DIV/0 !", "15"], 3],
+    ["Câu 412: Để hiển thị hoặc ẩn Menu bar như hình chụp trong Windows Explorer, thực hiện thế nào?", ["Organize \\ Menu Bar", "Include in Library \\ layout \\ menu bar", "Organize \\ Layout \\Menu Bar", "Include in Library \\ menu bar"], 3],
+    ["Câu 413: Loại WebSite nào có địa chỉ như sau: www.hodgkin.edu?", ["Tổ chức thương mại", "Tổ chức chính phủ", "Tổ chức phi lợi nhuận", "Tổ chức giáo dục"], 4],
+    ["Câu 414: Trong Transitions/ Trasition to this slide ta chọn “wipe”, sau đó trong Timing ta chọn Duration là 1.5 nghĩa là gì?", ["Điều chỉnh thời gian thực thi của hiệu ứng wipe và thời gian của slide là 1.5 giây", "Điều chỉnh thời gian thực thi của hiệu ứng wipe là 1.5 giây", "Điều chỉnh thời gian chờ để bắt đầu hiệu ứng wipe là 1.5 giây", "Điều chỉnh thời gian qua slide kế tiếp là 1.5 giây"], 2],
+    ["Câu 415: Cho biết phím tắt để mở cửa sổ xóa lịch sử duyệt Web?", ["Ctrl – Shift", "Ctrl – Delete", "Ctrl – Shift – Delete", "Shift – Delete"], 3],
+    ["Câu 416: Thông tin của hình chụp sau cho biết thiết bị có dung lượng đĩa là…?", ["4 GB", "112 GB", "1 GB", "3 GB"], 1],
+    ["Câu 417: Trong Powerpoint, khi đang thực hiện trình chiếu muốn chấm dứt phiên trình chiếu thực hiện thế nào?", ["Click chuột phải / Exit", "Click chuột phải / Quit", "Click chuột phải / End Show", "Click chuột phải / Return"], 3],
+    ["Câu 418: Ta có bảng tính sau: Để tính số môn thi có điểm dưới 5 thì công thức tại ô F2 lập thế nào?", ["= Countif(B2:E2,”<>5”)", "= Countif(B2:E2, <5)", "= CountiF(B2:E2,<>5)", "= Countif(B2:E2, “<5”)"], 4],
+    ["Câu 419: Cho biết tên miền nào của tổ chức chính phủ?", [".net", ".org", ".gov", ".edu"], 3],
+    ["Câu 420: Để vẽ đồ thị trong Slide ta chọn?", ["Design/ Chart", "File / Chart", "Insert /Chart", "View/ Chart"], 3],
+    ["Câu 421: Chức năng Slide color scheme trong PowerPoint là gì?", ["Chèn màu vào các slide", "Màu nền", "Tên của một slide mới", "Bộ màu chuẩn của Powerpoint"], 4],
+    ["Câu 422: Chương trình nào dưới đây có thể dùng để quản lí nhập, xuất tồn kho?", ["Microsoft Excel", "Microsoft Publisher", "Microsoft Word", "Microsoft Powerpoint"], 1],
+    ["Câu 423: Trong bảng tính Excel, hàm nào dùng để tìm kiếm giá trị theo cột?", ["Vlookup", "Hlookup", "Sum", "Left"], 1],
+    ["Câu 424: Để chuyển văn bản trong table như hình chụp thành dạng text như thế nào nhanh nhất?", ["Insert / table / Convert text to table", "Format / no border", "Table layout / Convert to text", "Table Design / Convert to text"], 1],
+    ["Câu 425: Trong soạn thảo Word, muốn chuyển đổi giữa hai chế độ nhập văn bản như chế độ gõ chèn và chế độ gõ thay thế, nhấn phím nào?", ["Insert", "Delete", "Tab", "CapsLock"], 1],
+    ["Câu 426: Lựa chọn nào không là kiểu của tập tin Powerpoint?", [".potx", ".ppsx", ".pptx", ".ptp"], 4],
+    ["Câu 427: Elearning có nghĩa là gì?", ["Phương pháp dùng các công nghệ Web và Internet trong học tập", "Ngôn ngữ lập trình", "Phương pháp dạy học lấy người học làm chủ đạo", "Phương pháp nghiên cứu về giáo dục"], 1],
+    ["Câu 428: Phần mềm nào sau đây không phải là phần mềm độc hại?", ["Trojan", "Worms", "Microsoft Word", "Spyware"], 3],
+    ["Câu 429: Trong soạn thảo Word, loại font chữ nào có thể dùng với bảng mã VNI Windows?", ["VINI – Times,.vn Arial, .vn Courier", "VNI-times, VNI-avo", ".VN Times, Times new roman", "VNI-Times, Arial, .Vn Avant"], 2],
+    ["Câu 430: Cách tạo một thư mục trong ô đĩa D của máy tính?", ["ổ đĩa D \\ New \\ Shortcut \\ Folder", "ổ đĩa D \\ Ctrl-Shift-N", "ô đĩa D \\ View \\Tiles \\ New \\ Folder", "ô đĩa D \\ View \\ List \\ New \\ Folder"], 2],
+    ["Câu 431: Trong bảng tính Excel, để chèn hình ảnh, ta thực hiện?", ["Thẻ Review \\ Picture", "Thẻ Data \\ Picture", "Thẻ Insert \\ Picture", "Thẻ Fomulas \\ Picture"], 3],
+    ["Câu 432: Muốn thay đổi nền hình Desktop ta phải thực hiện thao tác như thế nào?", ["Chuột đúp tại màn hình Desktop \\ Personalize \\ chọn ảnh", "Chuột phải tại màn hình Desktop \\ Personalize \\ chọn ảnh", "Chuột phải phải tại màn hình Desktop \\ Graphics Options \\ chọn ảnh", "Chuột phải tại màn hình Desktop \\ Screen Resolution và chọn ảnh"], 2],
+    ["Câu 433: Trong soạn thảo Word, cách chọn một đoạn văn bản không cần dùng chuột", ["Sử dụng phím F5", "Ctrl + A", "Sử dụng các phím mũi tên kết hợp với phím SHIFT", "Sử dụng các phím mũi tên kết hợp với phím CTRL"], 3],
+    ["Câu 434: Hệ thống các chương trình đảm nhận chức năng làm môi trường trung gian giữa người sử dụng và máy tính được gọi là:", ["Trình duyệt Web.", "Hệ Điều Hành", "Phần mềm", "Các loại trình biên dịch trung gian"], 2],
+    ["Câu 435: Trong bảng tính Excel, để thể hiện nội dung chữ trong 1 ô thành nhiều dòng, ta dùng chức năng nào sau đây?", ["Home/Midle Align & Center", "Home/ Alignment/ Merge Cells", "Home/ Alignment/ Wrap Text", "Home/ Alignment/ Shrink to Fit"], 3],
+    ["Câu 436: Để sử dụng các dịch vụ Email của Google, bạn cần thực hiện?", ["Không cần đăng ký", "Viết phiếu yêu cầu nhà cung cấp", "Đăng ký tài khoản Gmail trên Internet", "Đăng kí thông qua người đại diện của nhà cung cấp"], 3],
+    ["Câu 437: Trong soạn thảo Word, để dãn khoảng cách giữa các dòng là 1.5 line trong một đoạn thực hiện thế nào?", ["Ctrl - 5", "Ctrl + Shift + Q", "Ctrl - Shift +5", "Ctrl +Shift +P"], 1],
+    ["Câu 438: Cho biết cách nén thư mục như thế nào?", ["Click phải chuột vào thư mục cần nén \\Send to \\ Desktop \\Ok", "Click phải chuột vào thư mục cần nén \\ Add to <tên thư mục cần nén> \\Ok", "Click phải chuột vào thư mục cần nén \\ Properties \\ Sharing \\ Ok", "Click phải chuột vào thư mục cần nén \\Include in library \\Documents \\Ok"], 2],
+    ["Câu 439: Khi gửi email đến người nhận chính thì địa chỉ email nhập ở trường nào?", ["CC", "BCC", "Send to", "To"], 4],
+    ["Câu 440: Người và máy tính giao tiếp với nhau thông qua thành phần nào sau đây?", ["Đĩa cứng", "Chuột", "Bàn phím", "Hệ Điều Hành"], 4],
+    ["Câu 441: Trong bảng tính Excel, công thức =COUNTA(10,”C”,15) cho kết quả là:", ["1", "3", "2", "Báo lỗi"], 2],
+    ["Câu 442: Trong Powerpoint mỗi trang trình diễn được gọi là gì?", ["Document", "Slide", "File", "Program"], 2],
+    ["Câu 443: Trong Gmail, nếu tập tin gửi đính kèm vượt dung lượng cho phép. Vậy cho biết cách gửi tập tin đính kèm vượt dung lượng cho phép?", ["Nén tập tin", "Không gửi được", "Chia nhỏ tập tin", "Chia sẻ Google Drive"], 4],
+    ["Câu 444: Thời điểm Việt Nam chính thức gia nhập Internet là năm nào?", ["Cuối năm 1997", "Cuối năm 1996", "Cuối năm 1999", "Cuối năm 1998"], 1],
+    ["Câu 445: Tại một Slide ta dùng tổ hợp phím nào sau đây sẽ xoá slide đó?", ["ALT+E+D", "ALT+I+D", "ALT+E+F", "ALT+W+P"], 1],
+    ["Câu 446: Cho biết đâu là tên thiết bị mạng?", ["USB", "WAN", "LAN", "SWITCH"], 4],
+    ["Câu 447: Địa chỉ Email như thế nào là hợp lệ?", ["<Tên_miền>.<Tên_người_dùng>", "<Tên miền>@<Tên_người_dùng>", "<Tên_người_dùng>@<Tên_miền>", "<Tên_người_dùng>.<Tên_miền>"], 3],
+    ["Câu 448: Hãy cho biết đâu là trình duyệt Web của Microsoft?", ["Cốc cốc", "Firefox", "Internet explorer", "Google chrome"], 3],
+    ["Câu 449: Trong bảng tính Excel, biểu thức sau cho kết quả là gì nếu DTB = 9 và HK loại C (trong đó DTB: Điểm trung bình, HK: Hạnh kiểm) =If(OR(DTB>=8, HK= “A”),1000,300), bạn sử dụng lựa chọn?", ["False", "300", "1000", "#Value!"], 3],
+    ["Câu 450: Bộ nhớ RAM là bộ nhớ gì?", ["Receive memory", "Secondary memory", "Random Missing", "Primary memory"], 4],
+    ["Câu 451: Cho biết lệnh Home / Layout có ý nghĩa gì?", ["Thay đổi cách bố cục slide", "Định nghĩa một slide mẫu", "Thay đổi màu nền cho slide", "Chèn một loại hộp văn bản mới vào slide"], 1],
+    ["Câu 452: Trong bảng tính Excel, để tính tuổi của một người sinh ngày 24/11/1983 biết ngày sinh được nhập ở ô A2, ta sẽ chọn công thức sau đây?", ["= YEAR(TODAY()) – A2", "= YEAR(DAY()) – YEAR(A2)", "= YEAR(TODAY()) – YEAR(A2)", "= YEAR(TIMEVALUE(A2))"], 3],
+    ["Câu 453: Trong soạn thảo Word, muốn chuyển đổi giữa hai chế độ nhập văn bản như chế độ gõ chèn và chế độ gõ thay thế, nhấn phím nào?", ["CapsLock", "Tab", "Insert", "Delete"], 3],
+    ["Câu 454: Chức năng Slide color scheme trong Power Point là gì?", ["Chèn màu vào các slide", "Bộ màu chuẩn của Powerpoint", "Màu nền", "Tên của một slide mới"], 2],
+    ["Câu 455: Để chuyển văn bản trong table thành dạng text như thế nào nhanh nhất?", ["Table layout / Convert to text", "Insert / table / Convert text to table", "Format / no border", "Table Design / Convert to text"], 1]
+  ]
+};
+    // ===== STATE =====
+    let isFinished = false; // Mặc định là false khi bắt đầu
+    let isExam = false, timerInterval = null, timeLeft = 1800; // 30 phút
+    let userAnswers = []; // Lưu đáp án người dùng chọn
+    let reviewCorrect = 0; // BIẾN MỚI: Lưu số câu đúng khi ôn tập
+    let selectedChaps = [];
+    let qs = [], cur = 0, correct = 0, total = 0, wrong = [], review = false;
+
+    const app = document.getElementById("app");
+
+    // ===== START UI =====
+    function startUI() {
+      app.innerHTML = `
+    <h2>Bắt đầu</h2>
+    <div class="chaps">
+<div class="chap" id="c1" onclick="toggleChap('c1', this)">Chương 1</div>
+      </div> <div class="slider-wrap">
+        <div id="val">10</div>
+      <input type="range" id="slider" min="1" max="160" value="10">
+        </div> <button onclick="start()">Bắt đầu</button>
+  `;
+      updateSlider();
+    }
+
+    // ===== TOGGLE CHAPTER =====
+    function toggleChap(key, el) {
+      if (selectedChaps.includes(key)) {
+        selectedChaps = selectedChaps.filter(c => c !== key);
+        el.classList.remove("active");
+      } else {
+        selectedChaps.push(key);
+        el.classList.add("active");
+      }
+
+      updateSlider();
+    }
+
+    // ===== UPDATE SLIDER =====
+    function updateSlider() {
+      const slider = document.getElementById("slider");
+      const val = document.getElementById("val");
+
+      if (!slider) return;
+
+      let totalQ = 0;
+      selectedChaps.forEach(c => totalQ += qBank[c].length);
+
+      let minQ = selectedChaps.length || 1;
+
+      slider.min = minQ;
+      slider.max = totalQ || 1;
+
+      // SỬA LỖI: Ép kiểu sang Số (Number) trước khi so sánh
+      if (Number(slider.value) < minQ) {
+        slider.value = minQ;
+      } else if (Number(slider.value) > totalQ) {
+        slider.value = totalQ;
+      }
+
+      move();
+      slider.oninput = move;
+
+      function move() {
+        // SỬA LỖI: Ép kiểu sang Số (Number) trước khi so sánh
+        if (Number(slider.value) < Number(slider.min)) {
+          slider.value = slider.min;
+        }
+
+        const percent = (slider.value - slider.min) / (slider.max - slider.min || 1);
+
+        val.innerText = slider.value;
+
+        const w = slider.offsetWidth;
+        const thumb = 24; // Đã chỉnh lại 24px cho khớp với giao diện CSS mới
+        const x = percent * (w - thumb) + thumb / 2;
+
+        val.style.left = x + "px";
+
+        // Cập nhật lại màu sắc thanh gạt khớp với giao diện xanh hiện đại
+        slider.style.background =
+          `linear-gradient(to right,#3b82f6 ${percent * 100}%,#e2e8f0 ${percent * 100}%)`;
+      }
+    }
+
+    // ===== START =====
+    function start() {
+      if (selectedChaps.length === 0) {
+        alert("Phải chọn ít nhất 1 chương");
+        return;
+      }
+      const num = +document.getElementById("slider").value;
+      let pool = [];
+      selectedChaps.forEach(c => { pool = pool.concat(qBank[c]); });
+
+      qs = shuffle(pool).slice(0, num);
+
+      // ĐẢM BẢO RESET CÁC BIẾN NÀY
+      cur = 0;
+      correct = 0;
+      wrong = [];
+      review = false;
+      total = qs.length;
+
+      showQ();
+    }
+
+    // ===== SHOW =====
+    // Thêm biến trạng thái đóng mở Nav
+    let isNavOpen = false;
+
+    function toggleNav() {
+      isNavOpen = !isNavOpen;
+      showQ(); // Vẽ lại giao diện với trạng thái Nav mới
+    }
+
+    function showQ() {
+      if (cur >= qs.length && !isExam) { nextPhase(); return; }
+
+      const [q, opts, ansRaw] = qs[cur];
+      const hoverableQuestion = q.split(' ').map(word => `<span class="hover-word">${word}</span>`).join(' ');
+
+      const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+      const secs = (timeLeft % 60).toString().padStart(2, '0');
+      const timeStr = `${mins}:${secs}`;
+
+      let navButtonsHTML = "";
+      if (isExam || isFinished) {
+        navButtonsHTML = `
+        <div class="nav-btns-fixed">
+          <button onclick="prevQ()" ${cur === 0 ? 'disabled' : ''}>Lùi (W)</button>
+          ${!isFinished && cur === qs.length - 1
+            ? `<button onclick="finishExam()" style="background:#10b981">Nộp bài</button>`
+            : `<button onclick="nextQ()" ${cur === qs.length - 1 ? 'disabled' : ''}>Tiến (E)</button>`}
+        </div>`;
+      }
+
+      let timerValue = isFinished ? `Kết quả: ${correct} / ${qs.length}` : timeStr;
+      let timerHTML = (isExam || isFinished) ? `<div id="timer">${timerValue}</div>` : "";
+
+      let mainContent = `
+    ${timerHTML}
+    ${(isExam || isFinished) ? `<div class="toggle-nav-btn" onclick="toggleNav()">${isNavOpen ? '✕ Đóng danh sách (Q)' : '☰ Chọn câu hỏi (Q)'}</div>` : ""}
+    <div class="progress-text">Câu ${cur + 1} / ${qs.length}</div>
+    <div class="q">${hoverableQuestion}</div>
+    <div id="ans"></div>
+  `;
+
+      app.innerHTML = `
+    <div class="quiz-wrapper" style="position: relative;">
+      <button class="exit-btn" onclick="exitQuiz()" title="Thoát">
+        <svg viewBox="0 0 24 24">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+      </button>
+
+      ${(isExam || isFinished) ? `
+        <div class="nav-panel ${isNavOpen ? '' : 'collapsed'}">
+          <div style="grid-column: span 5; text-align: center; margin-bottom: 10px; font-size: 12px; color: #60a5fa; font-weight: bold;">
+            DANH SÁCH CÂU HỎI (Q)
+          </div>
+          ${renderNavItems(isFinished)}
+        </div>` : ""}
+      
+      <div class="quiz-main-content">${mainContent}</div>
+      ${navButtonsHTML}
+    </div>
+  `;
+
+      // Render Options (giữ nguyên logic cũ của bạn)
+      const box = document.getElementById("ans");
+      const letters = ["A", "B", "C", "D"];
+      opts.forEach((t, i) => {
+        const d = document.createElement("div");
+        d.className = "option";
+        if (isFinished) {
+          if (i + 1 === ansRaw) d.classList.add("correct");
+          if (userAnswers[cur] === i + 1 && i + 1 !== ansRaw) d.classList.add("wrong");
+        } else if (isExam && userAnswers[cur] === i + 1) {
+          d.classList.add("selected");
+        }
+        d.innerText = `${letters[i]}. ${t}`;
+        d.onclick = () => {
+          if (isFinished) return;
+          userAnswers[cur] = i + 1;
+          if (!isExam) {
+            if (i + 1 === ansRaw) { d.classList.add("correct"); correct++; }
+            else { d.classList.add("wrong"); wrong.push(qs[cur]); }
+            document.querySelectorAll(".option").forEach(el => el.style.pointerEvents = "none");
+            setTimeout(() => { cur++; showQ(); }, 600);
+          } else { showQ(); }
+        };
+        box.appendChild(d);
+      });
+    }
+    function exitQuiz() {
+      const msg = isFinished ? "Bạn muốn quay về màn hình chính?" : "Tiến trình làm bài sẽ bị mất. Bạn chắc chắn muốn thoát?";
+      if (confirm(msg)) {
+        // Dừng đồng hồ
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+
+        // Reset toàn bộ biến trạng thái
+        isExam = false;
+        isFinished = false;
+        isNavOpen = false;
+        cur = 0;
+        correct = 0;
+        userAnswers = [];
+        wrong = [];
+        review = false;
+
+        // Quay lại StartUI
+        startUI();
+      }
+    }
+    // Hàm bổ trợ đóng/mở Layer Nav mượt mà
+    function toggleNav() {
+      isNavOpen = !isNavOpen;
+      showQ();
+    }
+
+    // Hàm render danh sách câu hỏi (Thanh Nav)
+    function renderNavItems(finished) {
+      return qs.map((q, i) => {
+        let statusClass = ""; // Mặc định là nav-item (màu xám)
+
+        if (finished) {
+          statusClass = (userAnswers[i] === q[2]) ? 'correct' : 'wrong';
+        } else if (userAnswers[i] !== null) {
+          statusClass = 'done'; // Xanh nước biển
+        }
+
+        return `<div class="nav-item ${statusClass} ${cur === i ? 'active' : ''}" 
+                 onclick="cur=${i}; isNavOpen=false; showQ();">${i + 1}</div>`;
+        // Thêm isNavOpen=false để tự đóng layer sau khi chọn câu
+      }).join('');
+    }
+    function selectAnswer(ansIdx) {
+      userAnswers[cur] = ansIdx;
+    }
+
+    function nextQ() { if (cur < qs.length - 1) { cur++; showQ(); } }
+    function prevQ() { if (cur > 0) { cur--; showQ(); } }
+
+    function finishExam() {
+      if (!confirm("Xác nhận nộp bài?")) return;
+      clearInterval(timerInterval);
+      timerInterval = null;
+      window.isFinished = true; // Sử dụng biến toàn cục để showQ nhận diện
+
+      correct = 0;
+      qs.forEach((q, i) => { if (userAnswers[i] === q[2]) correct++; });
+      cur = 0;
+      showQ();
+    }
+
+
+    function check(o, el, raw) {
+      if (o.ok) {
+        el.classList.add("correct");
+        if (!review) {
+          correct++; // Điểm lần 1
+        } else {
+          reviewCorrect++; // Điểm khi ôn tập
+        }
+      } else {
+        el.classList.add("wrong");
+        if (!review) wrong.push(raw);
+      }
+
+      document.querySelectorAll(".option")
+        .forEach(e => e.style.pointerEvents = "none");
+
+      setTimeout(() => { cur++; showQ(); }, 600);
+    }
+    // ===== NEXT =====
+    function nextPhase() {
+      if (wrong.length > 0 && !review) {
+        qs = [...wrong]; // Lấy danh sách câu sai làm bộ câu hỏi mới
+        wrong = [];      // Reset danh sách sai tạm thời
+        cur = 0;         // Reset số thứ tự câu về 0 để làm lại từ đầu danh sách sai
+        review = true;   // Bật chế độ ôn tập (vòng này không tính điểm nữa)
+
+        app.innerHTML = `
+      <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; margin-top: 60px; animation: fadeIn 0.5s ease;">
+        <div style="font-size: 50px; margin-bottom: 10px;">🔄</div>
+        <h2 style="color: #f59e0b; font-size: 26px; font-weight: 800;">Ôn tập lại!</h2>
+        <p style="font-size: 18px; color: #475569; margin-top: 10px; line-height: 1.6; font-weight: 600;">
+          Bạn có <strong style="color: #ef4444; font-size: 20px;">${qs.length}</strong> câu chưa chính xác.<br>
+          Hãy cùng làm lại các câu này nhé...
+        </p>
+      </div>
+    `;
+
+        setTimeout(() => {
+          showQ();
+        }, 3000);
+
+      } else {
+        result(); // Nếu không có câu sai hoặc đã xong vòng review thì hiện kết quả
+      }
+    }
+
+    // ===== RESULT =====
+    function result() {
+      let reviewText = "";
+      if (review && (reviewCorrect > 0 || total > correct)) {
+        reviewText = `
+      <div style="margin-top: 10px; color: #60a5fa; font-size: 18px; border-top: 1px solid #475569; pt-10px">
+        ✨ Kết quả ôn tập: <b>${reviewCorrect} / ${qs.length}</b> câu đúng
+      </div>`;
+      }
+
+      app.innerHTML = `
+    <div style="text-align: center; padding: 10px;">
+      <h2 style="font-size: 28px; margin-bottom: 20px;">🎉 Hoàn thành!</h2>
+      <div style="background: #334155; padding: 25px; border-radius: 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.3)">
+        <p style="font-size: 20px; margin: 0; color: #94a3b8;">Điểm lần đầu của bạn:</p>
+        <p style="font-size: 48px; font-weight: 800; margin: 10px 0; color: #fbbf24;">${correct} <span style="font-size: 24px; color: #64748b;">/ ${total}</span></p>
+        ${reviewText}
+      </div>
+      <button onclick="reset()" style="margin-top: 30px;">Làm bài mới</button>
+    </div>
+  `;
+    }
+    // ===== RESET =====
+    function reset() {
+      selectedChaps = [];
+      startUI();
+    }
+
+    // ===== UTIL =====
+    function shuffle(a) {
+      return a.sort(() => Math.random() - 0.5);
+    }
+
+    // INIT
+    startUI();
+    // =========================================
+    // BỔ SUNG 1: TÍNH NĂNG NHẬN DIỆN MÁY TÍNH
+    // =========================================
+    function detectDesktop() {
+      // Dùng Regex kiểm tra User-Agent xem có phải mobile/tablet không
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      // Nếu không phải Mobile VÀ chiều rộng màn hình > 768px -> Đích thị là máy tính
+      if (!isMobile && window.innerWidth > 768) {
+        document.body.classList.add('is-desktop'); // Gắn class kích hoạt CSS Desktop
+      } else {
+        document.body.classList.remove('is-desktop');
+      }
+    }
+
+    // Chạy hàm kiểm tra ngay khi load và mỗi khi người dùng co giãn cửa sổ trình duyệt
+    window.addEventListener('resize', detectDesktop);
+    detectDesktop();
+
+    // =========================================
+    // BỔ SUNG 2: CHỌN ĐÁP ÁN BẰNG PHÍM (1, 2, 3, 4)
+    // =========================================
+    document.addEventListener('keydown', function (event) {
+      // Chỉ lấy các thẻ đáp án đang hiện trên màn hình
+      const options = document.querySelectorAll('.option');
+
+      // Kiểm tra xem người dùng đã chọn đáp án chưa (tránh tình trạng bấm phím 2 lần hoặc bấm khi app đang tự động chuyển câu)
+      const isAnswered = document.querySelector('.option.correct') || document.querySelector('.option.wrong');
+
+      // Nếu đang ở màn hình có đúng 4 đáp án và chưa trả lời
+      if (options.length === 4 && !isAnswered) {
+        switch (event.key) {
+          case '1': // Tương ứng phím 1 -> A
+            options[0].click();
+            break;
+          case '2': // Tương ứng phím 2 -> B
+            options[1].click();
+            break;
+          case '3': // Tương ứng phím 3 -> C
+            options[2].click();
+            break;
+          case '4': // Tương ứng phím 4 -> D
+            options[3].click();
+            break;
+        }
+      }
+
+      // Mở rộng thêm: Bấm Enter để bắt đầu làm bài hoặc làm lại
+      if (event.key === 'Enter') {
+        const btn = document.querySelector('button');
+        if (btn && btn.innerText.includes('Bắt đầu') || btn && btn.innerText.includes('Làm lại')) {
+          btn.click();
+        }
+      }
+    });
+    // Chế độ Ngẫu nhiên
+    function startRandom() {
+      selectedChaps = ['c1', 'c2', 'c3'];
+      const totalAvailable = qBank.c1.length + qBank.c2.length + qBank.c3.length;
+      //random num từ 5 đến 160 ( bội số của 5)
+      const num = (Math.floor(Math.random() * 32) + 1) * 5;
+      setupQuiz(num, false);
+    }
+
+    // Chế độ Thi thử
+    function startExam() {
+      isFinished = false;
+      selectedChaps = ['c1', 'c2', 'c3'];
+      isExam = true;
+      timeLeft = 1800;
+      setupQuiz(50, true);
+      startTimer();
+    }
+
+    function setupQuiz(num, examMode) {
+      let pool = [...qBank.c1, ...qBank.c2, ...qBank.c3];
+      qs = shuffle(pool).slice(0, num);
+      cur = 0; correct = 0; wrong = []; review = false;
+      userAnswers = new Array(qs.length).fill(null);
+      total = qs.length;
+      showQ();
+    }
+
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        const mins = Math.floor(timeLeft / 60);
+        const secs = timeLeft % 60;
+        const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+        // Cập nhật trực tiếp vào ID timer nếu nó tồn tại trên màn hình
+        const timerEl = document.getElementById("timer");
+        if (timerEl) {
+          timerEl.innerText = timeStr;
+        }
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          alert("Hết giờ làm bài!");
+          finishExam();
+        }
+      }, 1000);
+    }
+    function finishExam() {
+      // Kiểm tra chưa làm hết... (giữ nguyên logic cũ của bạn)
+      if (userAnswers.includes(null)) {
+        alert("Chưa làm hết bài!");
+        return;
+      }
+      if (!confirm("Xác nhận nộp bài?")) return;
+      clearInterval(timerInterval);
+      timerInterval = null;
+      isFinished = true; // CHUYỂN TRẠNG THÁI TẠI ĐÂY
+
+      // Tính điểm
+      correct = 0;
+      qs.forEach((q, i) => { if (userAnswers[i] === q[2]) correct++; });
+
+      cur = 0; // Quay lại câu 1 để xem lại
+      showQ();
+    }
+    // Lắng nghe sự kiện người dùng định đóng hoặc làm mới trang
+    window.addEventListener('beforeunload', function (e) {
+      // Chỉ kích hoạt cảnh báo nếu đang ở chế độ thi (isExam) và chưa nộp bài (!isFinished)
+      if (1) {
+        // Thông báo tiêu chuẩn của trình duyệt (đa số trình duyệt hiện đại sẽ dùng thông báo mặc định riêng)
+        const confirmationMessage = 'Ai biết à????';
+
+        e.returnValue = confirmationMessage; // Quy định của một số trình duyệt cũ
+        return confirmationMessage; // Quy định của trình duyệt hiện đại
+      }
+    });
+  </script>
+
+</body>
+
+</html>
