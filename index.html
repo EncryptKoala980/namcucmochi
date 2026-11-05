@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Quiz App - Modern UI/UX</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      background: #1e293b;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      position: relative;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    /* Giao diện Desktop mở rộng */
+    .is-desktop .card {
+      max-width: 900px;
+      min-height: 85vh;
+      border-radius: 20px;
+      padding: 40px 50px;
+      border: 1px solid #334155;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #f8fafc;
+      font-weight: 700;
+    }
+
+    /* CHAPTER BUTTON */
+    .chaps {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .chap {
+      flex: 1;
+      text-align: center;
+      padding: 16px 0;
+      background: #334155;
+      color: #94a3b8;
+      border: 2px solid #475569;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .chap:hover {
+      border-color: #64748b;
+      color: #cbd5e1;
+    }
+
+    .chap.active {
+      background: #1e3a8a;
+      color: #60a5fa;
+      border: 2px solid #3b82f6;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    }
+
+    /* SLIDER */
+    .slider-wrap {
+      position: relative;
+      margin: 40px 0 20px 0;
+    }
+
+    #slider {
+      width: 100%;
+      height: 10px;
+      border-radius: 10px;
+      appearance: none;
+      background: #334155;
+      outline: none;
+    }
+
+    #slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #3b82f6;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+      transition: transform 0.1s;
+    }
+
+    #slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    #val {
+      position: absolute;
+      top: -36px;
+      transform: translateX(-50%);
+      background: #3b82f6;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
+      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+    }
+
+    /* PROGRESS BAR */
+    .progress-container {
+      width: 100%;
+      background-color: #334155;
+      border-radius: 10px;
+      height: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(to right, #3b82f6, #60a5fa);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 14px;
+      color: #94a3b8;
+      text-align: right;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    /* QUESTION */
+    .q {
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      color: #f8fafc;
+    }
+
+    .is-desktop .q {
+      font-size: 24px;
+    }
+
+    /* OPTIONS */
+    #ans {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .is-desktop #ans {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .option {
+      background: #1e293b;
+      color: #cbd5e1;
+      padding: 18px 20px;
+      border-radius: 16px;
+      font-size: 17px;
+      line-height: 1.5;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid #334155;
+      position: relative;
+    }
+
+    .is-desktop .option {
+      padding: 22px;
+      font-size: 18px;
+      min-height: 90px;
+    }
+
+    @media (hover: hover) {
+      .option:hover {
+        transform: translateY(-2px);
+        border-color: #475569;
+        background: #273548;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    .option:active {
+      transform: scale(0.98);
+    }
+
+    .option.selected {
+      border-color: #3b82f6;
+      background: #1e3a8a;
+      color: #ffffff;
+    }
+
+    .option.correct {
+      background: #064e3b !important;
+      color: #a7f3d0 !important;
+      border-color: #10b981 !important;
+    }
+
+    .option.wrong {
+      background: #7f1d1d !important;
+      color: #fecaca !important;
+      border-color: #ef4444 !important;
+    }
+
+    /* Hiển thị phím tắt trên Desktop */
+    .is-desktop .option::after {
+      content: attr(data-key);
+      position: absolute;
+      right: 15px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    /* BUTTONS */
+    button {
+      width: 100%;
+      padding: 16px;
+      margin-top: 20px;
+      border: none;
+      border-radius: 14px;
+      background: #3b82f6;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    button:hover {
+      background: #2563eb;
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    /* TIMER */
+    #timer {
+      font-size: 22px;
+      font-weight: bold;
+      color: #ef4444;
+      text-align: center;
+      margin-bottom: 15px;
+      font-family: monospace;
+      background: rgba(239, 68, 68, 0.1);
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    /* NAV PANEL (Drawer chọn câu hỏi) */
+    .nav-panel {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      background: rgba(30, 41, 59, 0.98);
+      padding: 20px;
+      border-radius: 16px;
+      position: absolute;
+      top: 70px;
+      left: 20px;
+      right: 20px;
+      z-index: 999;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      border: 1px solid #3b82f6;
+      backdrop-filter: blur(10px);
+    }
+
+    .is-desktop .nav-panel {
+      left: 50px;
+      right: 50px;
+    }
+
+    .nav-panel.collapsed {
+      display: none;
+    }
+
+    .toggle-nav-btn {
+      background: #334155;
+      color: #cbd5e1;
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 15px;
+      display: inline-block;
+      font-weight: bold;
+      border: 1px solid #475569;
+      transition: 0.2s;
+    }
+
+    .toggle-nav-btn:hover {
+      background: #475569;
+      color: white;
+    }
+
+    .nav-item {
+      aspect-ratio: 1/1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #334155;
+      color: #94a3b8;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    .nav-item:hover {
+      border-color: #94a3b8;
+      color: white;
+    }
+
+    .nav-item.active {
+      outline: 2px solid #fbbf24;
+      color: white;
+    }
+
+    .nav-item.done {
+      background: #2563eb !important;
+      color: #ffffff !important;
+      border-color: #60a5fa !important;
+    }
+
+    .nav-item.correct {
+      background: #064e3b !important;
+      color: #a7f3d0 !important;
+      border-color: #10b981 !important;
+    }
+
+    .nav-item.wrong {
+      background: #7f1d1d !important;
+      color: #fecaca !important;
+      border-color: #ef4444 !important;
+    }
+
+    /* EXIT BUTTON */
+    .exit-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      background: #334155;
+      color: #94a3b8;
+      border: 1px solid #475569;
+      border-radius: 10px;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1001;
+      transition: 0.2s;
+    }
+
+    .exit-btn:hover {
+      background: #ef4444;
+      color: white;
+      border-color: #ef4444;
+    }
+
+    .exit-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* FIXED BOTTOM NAV */
+    .nav-btns-fixed {
+      display: flex;
+      gap: 12px;
+      margin-top: auto;
+      padding-top: 20px;
+    }
+
+    .nav-btns-fixed button {
+      margin-top: 0;
+      background: #475569;
+    }
+
+    .nav-btns-fixed button:hover {
+      background: #64748b;
+    }
+
+    .quiz-main-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card" id="app"></div>
+
+  <script>
+    // ===== DATA NGÂN HÀNG CÂU HỎI =====
+    const qBank = {
+      "c1": [
+  ["Trong ERM, thành phần \"Thông tin và giao tiếp\" có tác dụng gì đối với việc quản trị rủi ro hệ thống?", ["Đảm bảo thông tin về rủi ro được xác định và truyền đạt.", "Phát triển phần mềm độc quyền để ngăn ransomware.", "Loại bỏ nhu cầu đào tạo nhân viên về an toàn thông tin.", "Tự động hóa thu thập thông tin tình báo đối thủ cạnh tranh."], 1],
+  ["Kiến trúc doanh nghiệp (Enterprise Architecture - EA) đóng vai trò quan trọng gì trong tổ chức?", ["Chỉ tập trung nguồn lực vào việc cài đặt các phần mềm chống vi-rút cho hệ thống máy tính nội bộ của công ty.", "Tất cả các phương án trên đều là những nhận định hoàn toàn sai lầm về vai trò cốt lõi của kiến trúc doanh nghiệp.", "Xây dựng kế hoạch marketing truyền thông trên mạng xã hội cho các sản phẩm công nghệ mới sắp được ra mắt.", "Đồng bộ hóa chặt chẽ khả năng của hệ thống công nghệ thông tin với các mục tiêu kinh doanh chiến lược của tổ chức."], 4],
+  ["Khái niệm Sự thông thái (Wisdom) trong hệ thống thông tin nhằm mục đích giải quyết vấn đề gì?", ["Bổ sung các giá trị, kinh nghiệm và quy tắc đạo đức để đánh giá lý do tại sao một vấn đề kinh doanh lại xảy ra.", "Tự động hóa mọi quy trình thanh toán giao dịch đầu vào thông qua các thiết bị máy quét mã vạch tại siêu thị.", "Chỉ đơn thuần nhằm mục đích đếm chính xác số lượng hàng hóa vật lý còn lại trong hệ thống kho bãi của công ty.", "Sắp xếp toàn bộ các tệp dữ liệu hồ sơ khách hàng theo một thứ tự bảng chữ cái alphabet hoàn toàn tự động."], 1],
+  ["Hệ thống quản lý dữ liệu chủ (MDM) thực hiện chức năng chính nào trong quy trình hoạt động của tổ chức?", ["Chỉ tiến hành phân tích các dữ liệu phi cấu trúc được thu thập từ các nền tảng mạng lưới xã hội phổ biến nhất.", "Giám sát toàn bộ hệ thống cáp mạng vật lý và định tuyến lưu lượng của trung tâm lưu trữ dữ liệu doanh nghiệp", "Tích hợp dữ liệu từ nhiều nguồn khác nhau để tạo ra một cái nhìn thống nhất về khách hàng, sản phẩm, thực thể", "Tự động xóa bỏ các bản ghi cũ của khách hàng trong hệ thống lưu trữ đám mây nhằm giảm thiểu chi phí duy trì"], 3],
+  ["Sự khác biệt lớn nhất về mặt bản chất giữa loại tài liệu điện tử (Document) và hồ sơ điện tử (Record) là gì?", ["Tất cả các phương án được nêu ở trên đều là các nhận định về sự khác biệt hoàn toàn chính xác theo đúng tài liệu.", "Hồ sơ điện tử của tổ chức có thể dễ dàng bị chỉnh sửa lại bất cứ lúc nào và bởi bất kỳ người dùng nào trong mạng", "Tài liệu điện tử trong công ty hoàn toàn không bao giờ chứa bất kỳ các luồng thông tin nào dưới dạng văn bản chữ viết", "Tài liệu là đối tượng đang được hệ thống xử lý tích cực và có thể đổi, còn hồ sơ là công việc đã hoàn thành không đổi"], 4],
+  ["Việc hợp nhất các máy chủ vật lý thông qua nền tảng kỹ thuật ảo hóa giúp giảm thiểu tổng chi phí sở hữu (TCO) vì sao?", ["Nhờ vào việc hệ thống tự động loại bỏ tất cả các loại thuế phần mềm mà doanh nghiệp phải nộp hàng năm cho các cơ quan quản lý chính phủ.", "Bởi vì hệ thống mạng sau khi ảo hóa hoàn toàn không còn tiêu thụ bất kỳ nguồn năng lượng điện năng nào trong toàn bộ quá trình xử lý lệnh.", "Do các kỹ sư mạng máy tính không cần phải được trả lương hàng tháng khi làm việc với hệ thống kho chứa dữ liệu đã được ảo hóa trực tuyến.", "Vì nó tối ưu hóa không gian trung tâm dữ liệu, cắt giảm mạnh mẽ chi phí năng lượng và tiết kiệm chi phí bảo trì so với máy chủ vật lý."], 4],
+  ["Hậu quả nghiêm trọng nhất của hiệu ứng silo (Silo effect) khi xảy ra ở bên trong nội bộ các tổ chức là gì?", ["Cải thiện một cách đáng kể khả năng hợp tác, chia sẻ thông tin mật giữa tất cả các phòng ban nội bộ với nhau", "Tăng cường khả năng bảo mật thông tin lên mức tuyệt đối do các luồng dữ liệu đã được mạng lưới cô lập hoàn toàn", "Giảm thiểu tối đa toàn bộ chi phí duy trì hệ thống cơ sở hạ tầng công nghệ thông tin cho doanh nghiệp mỗi năm.", "Dữ liệu bị mắc kẹt, năng suất công việc giảm sút do các nhóm thiếu hệ thống để giao tiếp và hợp tác hiệu quả"], 4],
+  ["Đâu là một trong những lợi ích cốt lõi của việc áp dụng một chương trình quản trị dữ liệu hiệu quả trong công ty?", ["Tăng cường khả năng xảy ra các vụ vi phạm rò rỉ dữ liệu hệ thống trong tương lai do tính chất minh bạch quá cao", "Giảm thiểu được toàn bộ 100% chi phí cho việc mua sắm hệ thống phần cứng máy chủ mạng trong mọi thời kỳ.", "Cải thiện sự tuân thủ quy định pháp luật, tăng doanh thu và hỗ trợ ra quyết định kinh doanh hiệu quả, nhanh chóng", "Khuyến khích sự phát triển mạnh mẽ của các silo dữ liệu độc lập giữa các phòng ban khác nhau trong công ty"], 3],
+  ["Hệ thống xử lý giao dịch (TPS) có chức năng chính là gì trong quá trình vận hành?", ["Dự báo các xu hướng kinh tế vĩ mô trong tương lai xa cho các nhà quản lý cấp cao của doanh nghiệp.", "Tạo ra các mô hình đồ họa ba chiều phức tạp để hỗ trợ các kỹ sư thiết kế những sản phẩm công nghệ mới.", "Thu thập, lưu trữ, xử lý và giám sát các dữ liệu đầu vào phát sinh từ những giao dịch kinh doanh mỗi ngày.", "Phân tích chiến lược dài hạn nhằm mục đích giúp cho ban lãnh đạo doanh nghiệp dễ dàng mở rộng quy mô."], 3],
+  ["Vi phạm dữ liệu (Data breach) trong hệ thống công nghệ số xảy ra khi nào?", ["Khi quản trị viên cập nhật phần mềm mới cho hệ thống.", "Khi người dùng thay đổi mật khẩu wifi theo chu kỳ tháng.", "Khi cá nhân/nhóm truy xuất thành công thông tin nhạy cảm.", "Khi công ty nâng cấp băng thông mạng lên mức cao hơn."], 3],
+  ["Khái niệm mạng lưới (Network) trong hệ thống công nghệ được định nghĩa như thế nào?", ["Là một hệ thống phần mềm được cài đặt trên máy tính cá nhân để diệt virus và bảo vệ cơ sở dữ liệu.", "Là sự kết hợp của đường dây, thiết bị vật lý kết nối với nhau để trao đổi dữ liệu qua liên kết mạng.", "Là kho lưu trữ toàn bộ dữ liệu thô chưa qua xử lý của một doanh nghiệp trong một trung tâm vật lý.", "Là các quy trình chỉ dẫn người dùng cách sử dụng hệ thống phần cứng và phần mềm của một tổ chức."], 2],
+  ["Sự ra đời của IPv6 giải quyết trực tiếp vấn đề gì của hạ tầng mạng Internet?", ["Tự động chuyển đổi tín hiệu sóng tương tự sang tín hiệu số kỹ thuật số.", "Đảm bảo tốc độ truyền tải nhanh gấp hàng nghìn lần so với cáp quang.", "Cung cấp không gian địa chỉ khổng lồ để đáp ứng sự gia tăng thiết bị.", "Hạn chế hoàn toàn mọi cuộc tấn công phần mềm tống tiền ransomware."], 3],
+  ["Sự khác biệt lớn nhất về bản chất giữa Cơ sở dữ liệu thông thường và Kho dữ liệu (Data Warehouse) là gì?", ["CSDL mang tính không ổn định do xử lý giao dịch, trong khi dữ liệu trong kho tương đối ổn định để phân tích", "Cơ sở dữ liệu luôn luôn có khả năng lưu trữ lượng dữ liệu khổng lồ hơn rất nhiều so với các kho dữ liệu lớn", "Hoàn toàn không có bất kỳ một sự khác biệt đáng kể nào giữa cấu trúc và chức năng của hai loại hệ thống này.", "Dữ liệu trong Kho dữ liệu thường xuyên bị thay đổi nhanh chóng hơn so với trong hệ thống Cơ sở dữ liệu"], 1],
+  ["Quy trình ETL trong công nghệ quản lý kho dữ liệu là chữ viết tắt của các từ vựng tiếng Anh cơ bản nào?", ["Extract, Transform, Load", "Export, Translate, Load", "Extend, Transfer, Load", "Execute, Transform, Link."], 1],
+  ["Lỗ hổng cấu hình sai (Misconfiguration) trên thiết bị mạng IoT thường dẫn đến hậu quả trực tiếp nào?", ["Cung cấp điểm truy cập dễ dàng giúp kẻ tấn công xâm nhập vào mạng lõi công ty.", "Phá hủy vĩnh viễn cấu trúc hệ điều hành cốt lõi của máy chủ nền tảng đám mây.", "Gây nghẽn mạng cục bộ tại văn phòng làm việc do dữ liệu truyền tải liên tục.", "Tăng chi phí hóa đơn dịch vụ điện năng lên hàng chục lần trong vòng một tháng."], 1],
+  ["Chỉ số KPI về Dự án (Project Performance) cho hệ thống EA nhằm đo lường yếu tố gì?", ["Tổng số tiền doanh nghiệp tiết kiệm được khi chia sẻ tài nguyên tính toán thông qua các dịch vụ web kết nối với mạng internet bên ngoài.", "Tốc độ băng thông mạng tối đa mà hạ tầng viễn thông của công ty có thể duy trì được trong các giờ làm việc cao điểm buổi sáng.", "Khả năng tăng cường mức độ bảo mật cho các kho lưu trữ dữ liệu đám mây đang được thuê từ nhà cung cấp Amazon Web Services.", "Tỷ lệ phần trăm giảm thiểu thời gian, chi phí phát triển ứng dụng và số lượng các dự án được định hướng bởi kiến trúc doanh nghiệp."], 4],
+  ["Trong khuôn khổ COBIT 2019, nguyên tắc \"Định hướng mục tiêu kinh doanh\" của quản trị CNTT có ý nghĩa gì?", ["Đầu tư vào CNTT và bảo mật phải thực sự tạo ra giá trị và điều chỉnh theo hướng kinh doanh.", "Tất cả những nhân viên IT đều phải bắt buộc đảm nhận thêm khối lượng công việc bán hàng.", "Bộ phận IT chỉ cần tập trung nghiên cứu công nghệ mới không cần quan tâm lợi nhuận.", "Tách biệt hoàn toàn hoạt động của bộ phận CNTT khỏi sự can thiệp của phòng ban kinh doanh."], 1],
+  ["Sự khác biệt cốt lõi trong mục tiêu của tin tặc do nhà nước bảo trợ (APT) so với tội phạm mạng thông thường là gì?", ["Chúng thường chỉ tấn công để chứng tỏ kỹ năng lập trình xuất sắc của bản thân.", "Chúng tập trung đánh cắp tài sản trí tuệ và thông tin nhạy cảm một cách cực kỳ bài bản.", "Chúng chủ yếu tạo ra các mã độc tống tiền nhắm vào người dùng cá nhân để thu lợi nhỏ.", "Chúng luôn phá hủy hoàn toàn phần cứng vật lý ngay khi vừa truy cập được vào hệ thống."], 2],
+  ["Việc áp dụng quy trình chống trùng lặp dữ liệu (data deduplication) mang lại lợi ích chủ yếu nào cho tổ chức?", ["Giúp giảm thiểu đáng kể dung lượng lưu trữ cần thiết trên đĩa cứng và đồng bộ hóa các định dạng dữ liệu", "Tự động hóa hoàn toàn 100% quá trình phân tích hoạch định chiến lược của ban lãnh đạo doanh nghiệp", "Tăng tốc độ thu thập hàng loạt dữ liệu thô từ các hệ thống giao dịch trực tuyến của đối tác kinh doanh", "Tất cả các phương án được nêu ở trên đều là các lợi ích tuyệt vời của quy trình chống trùng lặp dữ liệu."], 1],
+  ["Các dữ liệu đầu vào đặc trưng của một hệ thống thông tin điều hành (EIS) có nguồn gốc xuất phát từ đâu?", ["Thường là những dữ liệu có cấu trúc lỏng lẻo kết hợp từ nhiều báo cáo nội bộ của cấp quản lý trung gian (MIS/DSS) cùng với các nguồn thông tin bên ngoài.", "Chỉ bao gồm duy nhất những con số phân tích lợi nhuận kỹ thuật số được trích xuất trực tiếp từ một ứng dụng tài chính cài đặt trên một chiếc điện thoại.", "Dựa hoàn toàn vào hệ thống máy quét thẻ từ chuyên dụng để theo dõi thời gian và số lần ra vào cửa văn phòng của từng người lao động trong phân xưởng.", "Hoàn toàn phụ thuộc vào việc đọc các dữ liệu mã vạch hàng hóa được thu thập tại các quầy thu ngân tính tiền của hệ thống cửa hàng siêu thị bán lẻ."], 1],
+  ["Các đặc điểm của khả năng mở rộng (Scalable) trong hệ thống Điện toán Đám mây (Cloud Computing) thường được triển khai trên thực tế ra sao?", ["Hệ thống này bắt buộc phải giới hạn chặt chẽ số lượng người dùng nội bộ được phép truy cập vào các ứng dụng máy chủ cùng một lúc nhằm tránh gây ra tình trạng quá tải.", "Luôn luôn yêu cầu người sử dụng phải tự tháo lắp các bo mạch chủ và thay thế các phần cứng vật lý mới bên trong trung tâm dữ liệu để tăng tốc độ kết nối mạng.", "Nó chỉ cho phép doanh nghiệp thực hiện mở rộng năng lực lưu trữ đúng một lần duy nhất vào lúc mới bắt đầu ký kết hợp đồng cung cấp dịch vụ máy chủ đầu tiên.", "Hệ thống đám mây có thể dễ dàng được điều chỉnh quy mô tài nguyên cấp phát một cách tự động để có thể đáp ứng những thay đổi linh hoạt trong nhu cầu kinh doanh."], 4],
+  ["\"Shadow IT\" (Bóng tối CNTT) gây nguy hiểm cho hệ thống thông tin vì lý do gì?", ["Là ứng dụng được bộ phận quản trị mạng cấp phép.", "Tất cả các phương án trên đều cung cấp thông tin sai.", "Là phần cứng/phần mềm không được bộ phận IT biết đến.", "Yêu cầu cấu hình phần cứng quá đắt đỏ để vận hành."], 3],
+  ["Thuật ngữ Quản trị dữ liệu (Data Governance) được tài liệu bài giảng định nghĩa một cách chính xác là gì?", ["Quá trình tự động hóa các giao dịch trực tuyến hằng ngày nhằm giảm thiểu chi phí nhân sự cho doanh nghiệp.", "Quản lý tổng thể tính khả dụng, khả năng sử dụng, tính toàn vẹn và bảo mật của dữ liệu dùng trong doanh nghiệp", "Quá trình quản lý việc cài đặt và bảo trì định kỳ hệ thống phần cứng của các máy chủ trong trung tâm dữ liệu", "Hoạt động phân tích các tập dữ liệu lớn nhằm mục đích dự đoán chính xác những xu hướng thị trường tương lai"], 2],
+  ["Tri thức ẩn (Tacit knowledge) trong tổ chức có đặc điểm khác biệt như thế nào so với tri thức hiện?", ["Là các quy tắc tài chính và kế toán được quy định rõ ràng trong các cuốn sổ tay hướng dẫn nghiệp vụ của công ty.", "Chỉ bao gồm các con số thống kê thuần túy chưa từng được tổ chức hoặc phân tích bằng bất kỳ công cụ nào.", "Rất khó để truyền đạt thành văn bản, thường phụ thuộc nhiều vào kỹ năng thực hành và kinh nghiệm cá nhân.", "Dễ dàng được mã hóa vào các hệ thống phần mềm quản lý và truyền tải thông qua mạng internet cho người khác"], 3],
+  ["Hạ tầng mạng lưới viễn thông đối mặt với rào cản kỹ thuật gì khi di chuyển khối lượng công việc khổng lồ lên đám mây?", ["Các thiết bị màn hình hiển thị tại văn phòng sẽ bị sọc nhiễu liên tục do nhiễu sóng từ trường phát ra từ các kết nối cáp quang ngầm dưới lòng đất bị quá tải.", "Các rào cản về kết nối mạng diện rộng (WAN) ngày càng trở nên quan trọng hơn vì nếu thiếu băng thông đủ mạnh thì mọi truy cập đám mây đều bị gián đoạn.", "Hệ thống điện toán đám mây sẽ yêu cầu mọi nhân viên phải nâng cấp ổ đĩa vật lý của máy tính lên dung lượng cực lớn để chứa hết tất cả các phần mềm ảo.", "Toàn bộ các hệ điều hành được cài đặt trên máy tính cá nhân của nhân viên sẽ tự động khởi động lại mỗi khi có một tin nhắn văn bản mới gửi qua mạng LAN."], 2],
+  ["Bộ tiêu chuẩn IEEE 802.11 thường được biết đến trên thị trường với tên gọi phổ biến là gì?", ["Giao thức Bluetooth dùng để kết nối các thiết bị ngoại vi trong phạm vi ngắn như tai nghe, chuột không dây và bàn phím.", "Mạng diện rộng không dây WiMAX chuyên cung cấp quyền truy cập băng thông rộng cho các vùng nông thôn xa xôi hẻo lánh.", "Công nghệ mạng không dây Wi-Fi giúp kết nối máy tính và các thiết bị thông minh với mạng thông qua bộ định tuyến.", "Mạng viễn thông di động thế hệ thứ tư (4G LTE) đảm nhiệm việc phủ sóng điện thoại di động tốc độ cao ở quy mô quốc gia."], 3],
+  ["Chu trình IPOS của một hệ thống thông tin tiêu chuẩn bao gồm những giai đoạn cốt lõi nào?", ["Phân tích yêu cầu hệ thống, Thiết kế giao diện, Kiểm thử ứng dụng phần mềm, Bảo trì định kỳ.", "Lập kế hoạch chiến lược, Đánh giá rủi ro tài chính, Phản hồi khách hàng, Hủy bỏ quy trình cũ.", "Thu thập Dữ liệu Đầu vào, Quá trình xử lý, Kết quả Đầu ra, và Lưu trữ thông tin để sử dụng sau.", "Khởi tạo dữ liệu ban đầu, Đầu tư phần cứng thiết bị, Sản xuất hàng hóa, Bán hàng trực tuyến."], 3],
+  ["Vì sao các máy ảo (VMs) được đánh giá là tiết kiệm năng lượng điện (Energy-efficient) hiệu quả hơn rất nhiều?", ["Bởi vì hệ thống ảo hóa này yêu cầu phải kết nối thêm rất nhiều quạt tản nhiệt cơ học khổng lồ để làm mát cho trung tâm cơ sở lưu trữ dữ liệu nội bộ.", "Do hệ thống cho phép gộp nhiều cụm máy chủ ảo chạy trên một hệ thống phần cứng vật lý, giúp giảm thiểu số lượng thiết bị tiêu thụ điện đang hoạt động.", "Vì phần mềm quản lý đám mây có chức năng tự động ngắt toàn bộ điện lưới của tòa nhà văn phòng nếu phát hiện thấy bất kỳ dấu hiệu xâm nhập trái phép nào.", "Nhờ vào việc các thiết bị máy tính cá nhân sẽ tự động giảm dần độ sáng màn hình hiển thị mỗi khi nhân viên không tương tác với bàn phím trong vài giây."], 2],
+  ["Đâu là một nhược điểm tương đối lớn của mô hình hệ thống cơ sở dữ liệu phân tán (Distributed database)?", ["Tốc độ tìm kiếm dữ liệu trên toàn hệ thống thường chậm hơn nhiều so với mô hình cơ sở dữ liệu tập trung", "Dung lượng lưu trữ và tài nguyên máy chủ phân bổ thường nhỏ hơn nhiều so với cơ sở dữ liệu tập trung.", "Nếu một máy chủ cục bộ bất kỳ gặp sự cố, toàn bộ hệ thống mạng lưới sẽ bị sập và phải ngừng chạy ngay", "Nếu có sự cố với mạng mà cơ sở dữ liệu phân tán đang sử dụng, có thể sẽ rất khó truy cập dữ liệu khi cần"], 4],
+  ["Dữ liệu dạng dịch vụ (DaaS) mang lại lợi ích gì cho việc quản trị thông tin doanh nghiệp?", ["Cho phép các tệp dữ liệu có thể dễ dàng được truy cập, chia sẻ và phân phối cho khách hàng qua mạng viễn thông.", "Loại bỏ hoàn toàn sự cần thiết của các nhân viên quản trị cơ sở dữ liệu và các biện pháp bảo mật trên hệ thống.", "Buộc công ty phải tự duy trì các hệ thống lưu trữ máy chủ vật lý cực kỳ phức tạp để đảm bảo an toàn thông tin.", "Chặn đứng hoàn toàn mọi nỗ lực của người dùng bên ngoài muốn truy cập vào bất kỳ bản báo cáo tài chính nào."], 1],
+  ["Khi xây dựng và phát triển chương trình quản trị dữ liệu, tại sao ban quản lý cần phải ước tính tỷ lệ ROI?", ["Để trình bày một trường hợp kinh doanh mạnh mẽ nhằm nhận được sự ủng hộ từ các giám đốc điều hành hàng đầu", "Để lách luật tránh việc bắt buộc phải chia sẻ dữ liệu nhạy cảm với các đối tác kinh doanh bên ngoài của công ty.", "Để nộp báo cáo chứng minh với cơ quan pháp luật rằng chương trình này hoàn toàn không mang lại lợi ích tài chính", "Để được chính phủ giảm trừ các khoản thuế thu nhập doanh nghiệp phải đóng cho nhà nước trong năm tài chính"], 1],
+  ["Đối tượng lao động nào được hưởng lợi ích trực tiếp và rõ rệt nhất từ công nghệ điện toán di động?", ["Những nhà quản lý cơ sở dữ liệu luôn phải túc trực 24/7 bên cạnh các tủ máy chủ khổng lồ đặt tại trung tâm dữ liệu lạnh.", "Các nhân viên bán hàng, sửa chữa hoặc dịch vụ thường xuyên phải di chuyển bên ngoài trụ sở, nhà máy vật lý của công ty.", "Tất cả các đối tượng lao động trên đều phụ thuộc bắt buộc vào thiết bị điện toán di động để hoàn thành nhiệm vụ mỗi ngày.", "Các lập trình viên thường xuyên làm việc trong một văn phòng cố định và sử dụng hệ thống máy trạm có màn hình kép lớn."], 2],
+  ["Quá trình thu thập dữ liệu thay đổi (CDC - Change Data Capture) trong hệ thống thực hiện chức năng gì?", ["Nắm bắt các thay đổi được thực hiện tại nguồn dữ liệu và áp dụng vào kho lưu trữ để giữ dữ liệu đồng bộ hóa", "Khôi phục lại toàn bộ cơ sở dữ liệu từ đầu khi hệ thống máy chủ lưu trữ bất ngờ gặp sự cố mất điện diện rộng", "Tự động nhận diện và loại bỏ tất cả các tệp tin dữ liệu trùng lặp tồn tại bên trong kho dữ liệu của doanh nghiệp", "Chuyển đổi mọi loại dữ liệu phi cấu trúc thành các định dạng dữ liệu có cấu trúc chuẩn theo yêu cầu hệ thống."], 1],
+  ["Đặc điểm nổi bật nhất của mạng diện rộng (WAN) so với mạng LAN là gì?", ["Trải rộng trên một khu vực địa lý quy mô lớn và thường do các nhà cung cấp dịch vụ Internet (ISP) cùng quản lý.", "Chỉ bao phủ một diện tích vật lý rất nhỏ như một văn phòng đơn lẻ và được quản lý bởi duy nhất một cá nhân.", "Sử dụng sóng vô tuyến tần số cao để giao tiếp độc quyền giữa các thiết bị thông minh trong phạm vi dưới mười mét.", "Là mạng cung cấp khả năng duyệt web không tốn kém chỉ dành riêng cho nhân viên làm việc bên trong một công ty."], 1],
+  ["Vai trò của IT trong việc đạt được các mục tiêu kinh doanh là gì?", ["IT chỉ tập trung vào việc tạo ra lợi thế cạnh tranh.", "IT chỉ giới hạn trong việc sửa chữa các hệ thống cũ.", "IT nên tập trung vào việc tăng cường hiệu suất tổ chức, tăng trưởng và tính bền vững.", "IT phải hoàn toàn loại bỏ các quy trình không chính thức."], 3],
+  ["Cơ chế giao dịch \"Cam kết\" (Commit) ở trong hệ thống quản trị cơ sở dữ liệu (DBMS) sẽ xảy ra khi nào?", ["Khi một khối dữ liệu thông tin hoàn toàn mới được người dùng tạo ra và đưa vào trong chuỗi Blockchain", "Khi có bất kỳ thay đổi nào đối với dữ liệu vừa được thực hiện trong một giao dịch chưa hề được cam kết", "Khi toàn bộ mạng lưới hệ thống máy chủ gặp sự cố mất điện đột ngột và cần phải khôi phục lại dữ liệu.", "Khi những thay đổi mang tính chất vĩnh viễn đã được hệ thống thực hiện thành công ở bên trong giao dịch"], 4],
+  ["Một trong những điểm khác biệt chính giữa EDMS và ERMS liên quan đến việc xử lý các tệp hồ sơ lưu trữ là gì?", ["EDMS hoàn toàn không hỗ trợ tính năng theo dõi lịch sử truy cập hay bất kỳ công cụ quản lý các phiên bản chỉnh sửa nào cả.", "Người dùng EDMS có thể mở khóa tài liệu để sửa đổi, trong khi ERMS yêu cầu hồ sơ phải giữ nguyên định dạng ban đầu", "ERMS cho phép người dùng thoải mái thay đổi toàn bộ nội dung của các hồ sơ lịch sử mà không cần phải lưu lại phiên bản cũ", "EDMS không cho phép bất kỳ người dùng nào tìm kiếm các tệp tài liệu thông qua hệ thống từ khóa đã được lập chỉ mục"], 2],
+  ["Kinh tế chia sẻ là gì?", ["Một hệ thống kinh tế trong đó hàng hóa hoặc dịch vụ được trao đổi giữa các cá nhân tư nhân.", "Hoạt động kinh tế tạo ra bởi các công ty công nghệ.", "Một mô hình kinh doanh dựa trên đăng ký.", "Sự gia tăng của công việc theo hợp đồng."], 1],
+  ["Quyết định có cấu trúc (Structured decisions) mang đặc điểm vận hành nổi bật nào sau đây?", ["Phụ thuộc hoàn toàn vào linh cảm và trực giác cá nhân của những vị tổng giám đốc điều hành lâu năm tại doanh nghiệp.", "Yêu cầu sự tham gia bắt buộc của tất cả các nhân viên cấp thấp trực tiếp thực hiện việc sản xuất hàng hóa tại xưởng.", "Chỉ xảy ra trong các trường hợp khủng hoảng cực kỳ bất thường chưa từng có bất kỳ tiền lệ nào trước đây trong lịch sử.", "Có phương pháp giải quyết vấn đề rất rõ ràng, thường diễn ra xuyên suốt và có thể được hệ thống áp dụng nhất quán."], 4],
+  ["Nghịch lý về khả năng phục hồi CNTT (IT Resilience Paradox) mô tả thực trạng nào của các doanh nghiệp hiện nay?", ["Có đầy đủ kế hoạch phục hồi chi tiết nhưng lại không được duyệt ngân sách triển khai.", "Các nhà cung cấp dịch vụ từ chối ký hợp đồng do lo sợ mức bồi thường thiệt hại quá lớn.", "Muốn phục hồi dữ liệu nhanh nhưng lại chỉ sử dụng phương pháp lưu trữ bằng băng từ.", "Coi phục hồi là yếu tố tiên quyết nhưng phần lớn không có kế hoạch sẵn sàng ứng phó."], 4],
+  ["Một tổ chức có chính sách cho phép BYOD. Để giảm thiểu rủi ro, quản trị viên IT nên sử dụng giải pháp nào?", ["Khóa tính năng gọi điện thoại trên thiết bị cá nhân của nhân viên công ty.", "Bắt buộc nhân viên chỉ được sử dụng mạng dữ liệu di động 4G thay vì kết nối Wi-Fi.", "Cấm mọi ứng dụng di động, kể cả ứng dụng văn phòng có trên kho ứng dụng chính thức.", "Áp dụng chức năng ngắt kết nối di động hoặc khả năng xóa dữ liệu công ty từ xa."], 4],
+  ["Trong bối cảnh quản lý dữ liệu chủ (MDM), khái niệm \"Thực thể dữ liệu\" (Data entity) được hiểu là gì?", ["Bất kỳ thứ gì có thực hoặc mang tính trừu tượng mà một công ty muốn tiến hành thu thập và lưu trữ thông tin", "Giao thức mạng dùng để truyền tải các gói dữ liệu tốc độ cao trên mạng lưới cáp quang viễn thông toàn cầu.", "Khái niệm chuyên ngành chỉ các thiết bị phần cứng chuyên dụng dùng để lưu trữ dữ liệu của doanh nghiệp lớn", "Một loại phần mềm diệt virus tiên tiến độc quyền giúp bảo vệ an toàn cho cơ sở dữ liệu của doanh nghiệp"], 1],
+  ["Khái niệm \"Garbage In, Garbage Out\" (GIGO) trong ngữ cảnh phân tích và xử lý dữ liệu mang ý nghĩa là gì?", ["Bất kỳ các dữ liệu nào không được người dùng sử dụng sẽ tự động bị hệ thống quản lý xóa bỏ hoàn toàn ngay lập tức.", "Hệ thống máy tính trung tâm có khả năng hoàn toàn tự động dọn dẹp các tệp dữ liệu rác không sử dụng định kỳ", "Dữ liệu đầu vào kém chất lượng và không đáng tin cậy sẽ tạo ra các kết quả phân tích và quyết định sai lệch theo", "Dữ liệu rác có thể được hệ thống trí tuệ nhân tạo tự động biến đổi thành các nguồn dữ liệu có giá trị phân tích cao"], 3],
+  ["Ví dụ nào sau đây là công ty Access-over-Ownership?", ["Google.", "Uber.", "Zipcar.", "Netflix."], 3],
+  ["Sau khi Uber mở rộng ra ngoài Hoa Kỳ, họ đã gặp phải những khó khăn gì ở các quốc gia như Trung Quốc, Nga, Ấn Độ và Đông Nam Á?", ["Công nghệ ứng dụng di động không hoạt động.", "Thiếu tài xế biết nói tiếng Anh.", "Các vấn đề về múi giờ.", "Kháng cự và cạnh tranh từ các công ty địa phương."], 4],
+  ["Phương pháp giảm thiểu rủi ro \"Chuyển giao\" (Transference) trong hạ tầng IT được áp dụng bằng cách nào?", ["Chấp nhận thiệt hại nếu thảm họa thiên nhiên xảy ra.", "Tự xây dựng trung tâm dữ liệu phụ để sao lưu tập tin.", "Cấm hoàn toàn việc sử dụng internet trong mạng công ty.", "Thuê một bên thứ ba đảm nhận hoạt động nhằm giảm tải."], 4],
+  ["Điểm phát sóng (hotspot) Wi-Fi là gì?", ["Là điểm truy cập không dây cung cấp Internet cho thiết bị di động.", "Là phần mềm chống virus bảo vệ bộ định tuyến.", "Là một loại cáp đồng trục cung cấp kết nối vật lý.", "Tất cả các phương án trên đều là định nghĩa chính xác."], 1],
+  ["Kỹ thuật Phishing (Tấn công lừa đảo) thường sử dụng phương tiện gì để xâm nhập?", ["Đánh cắp thiết bị vật lý chứa dữ liệu tại trung tâm.", "Can thiệp trực tiếp vào dây cáp mạng viễn thông.", "Gửi email giả mạo để lừa người dùng cung cấp thông tin.", "Cài đặt các ứng dụng hợp lệ thông qua cửa hàng mạng."], 3],
+  ["Mô hình kinh doanh Ecosystem bao gồm điều gì?", ["Khách hàng được bán một bộ sản phẩm/dịch vụ phụ thuộc lẫn nhau mà khi mua, giá trị sẽ tăng lên dựa trên số lượng sở hữu.", "Khách hàng chỉ trả tiền thuê hàng tháng.", "Khách hàng được cung cấp phiên bản cơ bản miễn phí.", "Khách hàng là \"sản phẩm\"."], 1],
+  ["Kiến trúc vận hành của một SDDC (Trung tâm dữ liệu định nghĩa bằng phần mềm) hoạt động ra sao?", ["Yêu cầu quá trình sao lưu dữ liệu phải được thực hiện hoàn toàn thủ công bằng các loại băng từ truyền thống mỗi khi có một tệp tin mới được tạo.", "Bắt buộc người sử dụng phải tự thiết kế lại các bảng mạch vi điện tử mỗi khi hệ thống có nhu cầu mở rộng dung lượng lưu trữ cho dữ liệu.", "Tách biệt hoàn toàn lớp phần mềm điều khiển thông minh ra khỏi lớp phần cứng vật lý bên dưới để quản lý các luồng công việc một cách tự động.", "Chỉ sử dụng độc quyền các thiết bị định tuyến mạng không có bất kỳ khả năng nào để nhận các bộ lệnh từ hệ thống phần mềm điều khiển đám mây."], 3]
+]
+    };
+
+    // ===== STATE (TRẠNG THÁI ỨNG DỤNG) =====
+    let isFinished = false;
+    let isExam = true; // Đặt mặc định hoặc thay đổi theo flow
+    let timerInterval = null;
+    let timeLeft = 1800; // 30 phút
+    let userAnswers = [];
+    let selectedChaps = ["c1"];
+    let qs = [], cur = 0, correct = 0, total = 0, wrong = [], review = false;
+    let isNavOpen = false;
+
+    const app = document.getElementById("app");
+
+    // ===== UI: MÀN HÌNH BẮT ĐẦU =====
+    function startUI() {
+      app.innerHTML = `
+        <h2>Lựa Chọn Chương Ôn Tập</h2>
+        <div class="chaps">
+          <div class="chap active" id="c1" onclick="toggleChap('c1', this)">Chương 1</div>
+        </div> 
+        <div class="slider-wrap">
+          <div id="val">10</div>
+          <input type="range" id="slider" min="1" max="10" value="10">
+        </div> 
+        <button onclick="startExamMode()">Bắt đầu làm bài</button>
+      `;
+      updateSlider();
+    }
+
+    function toggleChap(key, el) {
+      if (selectedChaps.includes(key)) {
+        if (selectedChaps.length === 1) {
+          alert("Phải chọn ít nhất 1 chương!");
+          return;
+        }
+        selectedChaps = selectedChaps.filter(c => c !== key);
+        el.classList.remove("active");
+      } else {
+        selectedChaps.push(key);
+        el.classList.add("active");
+      }
+      updateSlider();
+    }
+
+    function updateSlider() {
+      const slider = document.getElementById("slider");
+      const val = document.getElementById("val");
+      if (!slider) return;
+
+      let totalQ = 0;
+      selectedChaps.forEach(c => {
+        if (qBank[c]) totalQ += qBank[c].length;
+      });
+
+      let minQ = Math.min(1, totalQ);
+      slider.min = minQ;
+      slider.max = totalQ || 1;
+
+      if (Number(slider.value) > totalQ) slider.value = totalQ;
+
+      moveSliderThumb();
+      slider.oninput = moveSliderThumb;
+
+      function moveSliderThumb() {
+        const percent = (slider.value - slider.min) / (slider.max - slider.min || 1);
+        val.innerText = slider.value;
+        const w = slider.offsetWidth;
+        const thumb = 24;
+        const x = percent * (w - thumb) + thumb / 2;
+        val.style.left = x + "px";
+        slider.style.background = `linear-gradient(to right, #3b82f6 ${percent * 100}%, #334155 ${percent * 100}%)`;
+      }
+    }
+
+    // ===== KHỞI TẠO BÀI THI =====
+    function startExamMode() {
+      if (selectedChaps.length === 0) {
+        alert("Phải chọn ít nhất 1 chương");
+        return;
+      }
+      const num = +document.getElementById("slider").value;
+      let pool = [];
+      selectedChaps.forEach(c => { if (qBank[c]) pool = pool.concat(qBank[c]); });
+
+      qs = shuffle(pool).slice(0, num);
+      cur = 0;
+      correct = 0;
+      wrong = [];
+      review = false;
+      isFinished = false;
+      isExam = true;
+      userAnswers = new Array(qs.length).fill(null);
+      total = qs.length;
+      timeLeft = 1800;
+
+      startTimer();
+      showQ();
+    }
+
+    // ===== HIỂN THỊ CÂU HỎI =====
+    function showQ() {
+      if (cur >= qs.length) {
+        finishExam();
+        return;
+      }
+
+      const [q, opts, ansRaw] = qs[cur];
+      const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+      const secs = (timeLeft % 60).toString().padStart(2, '0');
+      
+      const progressPercent = ((cur + 1) / qs.length) * 100;
+
+      app.innerHTML = `
+        <button class="exit-btn" onclick="exitQuiz()" title="Thoát">
+          <svg viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </button>
+
+        <div id="timer">${isFinished ? `Kết quả: ${correct} / ${qs.length}` : `${mins}:${secs}`}</div>
+        
+        <div class="toggle-nav-btn" onclick="toggleNav()">
+          ${isNavOpen ? '✕ Đóng danh sách câu hỏi (Q)' : '☰ Danh sách câu hỏi (Q)'}
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-bar" style="width: ${progressPercent}%"></div>
+        </div>
+        <div class="progress-text">Câu ${cur + 1} / ${qs.length}</div>
+
+        <div class="nav-panel ${isNavOpen ? '' : 'collapsed'}">
+          <div style="grid-column: span 5; text-align: center; margin-bottom: 5px; font-size: 13px; color: #60a5fa; font-weight: bold;">
+            BẢNG CÂU HỎI
+          </div>
+          ${renderNavItems()}
+        </div>
+
+        <div class="quiz-main-content">
+          <div class="q">${q}</div>
+          <div id="ans"></div>
+          
+          <div class="nav-btns-fixed">
+            <button onclick="prevQ()" ${cur === 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>Lùi (W)</button>
+            ${!isFinished && cur === qs.length - 1
+              ? `<button onclick="finishExam()" style="background:#10b981">Nộp bài</button>`
+              : `<button onclick="nextQ()" ${cur === qs.length - 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>Tiến (E)</button>`}
+          </div>
+        </div>
+      `;
+
+      // Render Options
+      const box = document.getElementById("ans");
+      const letters = ["A", "B", "C", "D"];
+      const keyCodes = ["1", "2", "3", "4"];
+
+      opts.forEach((t, i) => {
+        const d = document.createElement("div");
+        d.className = "option";
+        d.setAttribute("data-key", `Phím ${keyCodes[i]}`);
+
+        if (isFinished) {
+          if (i + 1 === ansRaw) d.classList.add("correct");
+          if (userAnswers[cur] === i + 1 && i + 1 !== ansRaw) d.classList.add("wrong");
+        } else if (userAnswers[cur] === i + 1) {
+          d.classList.add("selected");
+        }
+
+        d.innerText = `${letters[i]}. ${t}`;
+        d.onclick = () => {
+          if (isFinished) return;
+          userAnswers[cur] = i + 1;
+          showQ();
+        };
+        box.appendChild(d);
+      });
+    }
+
+    function renderNavItems() {
+      return qs.map((q, i) => {
+        let statusClass = "";
+        if (isFinished) {
+          statusClass = (userAnswers[i] === q[2]) ? 'correct' : 'wrong';
+        } else if (userAnswers[i] !== null) {
+          statusClass = 'done';
+        }
+        return `<div class="nav-item ${statusClass} ${cur === i ? 'active' : ''}" onclick="jumpToQ(${i})">${i + 1}</div>`;
+      }).join('');
+    }
+
+    function jumpToQ(index) {
+      cur = index;
+      isNavOpen = false;
+      showQ();
+    }
+
+    function toggleNav() {
+      isNavOpen = !isNavOpen;
+      showQ();
+    }
+
+    function nextQ() { if (cur < qs.length - 1) { cur++; showQ(); } }
+    function prevQ() { if (cur > 0) { cur--; showQ(); } }
+
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        const timerEl = document.getElementById("timer");
+        if (timerEl && !isFinished) {
+          const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+          const secs = (timeLeft % 60).toString().padStart(2, '0');
+          timerEl.innerText = `${mins}:${secs}`;
+        }
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          alert("Hết giờ làm bài!");
+          finishExam();
+        }
+      }, 1000);
+    }
+
+    function finishExam() {
+      if (!isFinished && userAnswers.includes(null)) {
+        if (!confirm("Bạn còn câu chưa trả lời. Bạn có chắc chắn muốn nộp bài?")) return;
+      } else if (!isFinished) {
+        if (!confirm("Xác nhận nộp bài?")) return;
+      }
+
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      isFinished = true;
+      isNavOpen = false;
+
+      correct = 0;
+      qs.forEach((q, i) => { if (userAnswers[i] === q[2]) correct++; });
+      cur = 0;
+      showQ();
+    }
+
+    function exitQuiz() {
+      if (confirm("Tiến trình sẽ bị hủy. Bạn có muốn thoát?")) {
+        if (timerInterval) clearInterval(timerInterval);
+        isFinished = false;
+        isExam = false;
+        isNavOpen = false;
+        cur = 0;
+        correct = 0;
+        userAnswers = [];
+        startUI();
+      }
+    }
+
+    // ===== PHÍM TẮT ĐIỀU HƯỚNG =====
+    document.addEventListener('keydown', function (event) {
+      const key = event.key.toLowerCase();
+      if (key === 'q') {
+        toggleNav();
+      }
+      if (key === 'w') {
+        prevQ();
+      }
+      if (key === 'e') {
+        nextQ();
+      }
+
+      // Chọn đáp án bằng phím số 1, 2, 3, 4
+      if (!isFinished && ["1", "2", "3", "4"].includes(event.key)) {
+        const optionIdx = parseInt(event.key) - 1;
+        const options = document.querySelectorAll('.option');
+        if (options[optionIdx]) {
+          options[optionIdx].click();
+        }
+      }
+    });
+
+    // ===== RESPONSIVE CHECK =====
+    function detectDesktop() {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (!isMobile && window.innerWidth > 768) {
+        document.body.classList.add('is-desktop');
+      } else {
+        document.body.classList.remove('is-desktop');
+      }
+    }
+
+    window.addEventListener('resize', detectDesktop);
+    detectDesktop();
+
+    // Khởi chạy ứng dụng
+    startUI();
+  </script>
+</body>
+</html>
