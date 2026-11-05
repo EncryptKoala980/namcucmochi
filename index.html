@@ -4,7 +4,7 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
-  <title>Quiz App - Modern UI/UX</title>
+  <title>Quiz App - Loop Mode</title>
 
   <style>
     * {
@@ -38,7 +38,6 @@
       transition: all 0.3s ease;
     }
 
-    /* Giao diện Desktop mở rộng */
     .is-desktop .card {
       max-width: 900px;
       min-height: 85vh;
@@ -55,7 +54,6 @@
       font-weight: 700;
     }
 
-    /* CHAPTER BUTTON */
     .chaps {
       display: flex;
       gap: 12px;
@@ -77,11 +75,6 @@
       transition: all 0.2s ease;
     }
 
-    .chap:hover {
-      border-color: #64748b;
-      color: #cbd5e1;
-    }
-
     .chap.active {
       background: #1e3a8a;
       color: #60a5fa;
@@ -89,7 +82,6 @@
       box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
     }
 
-    /* SLIDER */
     .slider-wrap {
       position: relative;
       margin: 40px 0 20px 0;
@@ -115,10 +107,6 @@
       transition: transform 0.1s;
     }
 
-    #slider::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
-    }
-
     #val {
       position: absolute;
       top: -36px;
@@ -133,7 +121,6 @@
       box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
     }
 
-    /* PROGRESS BAR */
     .progress-container {
       width: 100%;
       background-color: #334155;
@@ -158,7 +145,18 @@
       font-weight: bold;
     }
 
-    /* QUESTION */
+    .round-indicator {
+      text-align: center;
+      font-size: 14px;
+      color: #38bdf8;
+      margin-bottom: 10px;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.1);
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
     .q {
       font-size: 20px;
       font-weight: 600;
@@ -171,7 +169,6 @@
       font-size: 24px;
     }
 
-    /* OPTIONS */
     #ans {
       display: flex;
       flex-direction: column;
@@ -218,12 +215,6 @@
       transform: scale(0.98);
     }
 
-    .option.selected {
-      border-color: #3b82f6;
-      background: #1e3a8a;
-      color: #ffffff;
-    }
-
     .option.correct {
       background: #064e3b !important;
       color: #a7f3d0 !important;
@@ -236,7 +227,6 @@
       border-color: #ef4444 !important;
     }
 
-    /* Hiển thị phím tắt trên Desktop */
     .is-desktop .option::after {
       content: attr(data-key);
       position: absolute;
@@ -249,7 +239,6 @@
       font-weight: 700;
     }
 
-    /* BUTTONS */
     button {
       width: 100%;
       padding: 16px;
@@ -267,119 +256,8 @@
 
     button:hover {
       background: #2563eb;
-      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
     }
 
-    button:active {
-      transform: scale(0.98);
-    }
-
-    /* TIMER */
-    #timer {
-      font-size: 22px;
-      font-weight: bold;
-      color: #ef4444;
-      text-align: center;
-      margin-bottom: 15px;
-      font-family: monospace;
-      background: rgba(239, 68, 68, 0.1);
-      padding: 8px;
-      border-radius: 10px;
-      border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-
-    /* NAV PANEL (Drawer chọn câu hỏi) */
-    .nav-panel {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-      background: rgba(30, 41, 59, 0.98);
-      padding: 20px;
-      border-radius: 16px;
-      position: absolute;
-      top: 70px;
-      left: 20px;
-      right: 20px;
-      z-index: 999;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-      border: 1px solid #3b82f6;
-      backdrop-filter: blur(10px);
-      max-height: 60vh;
-      overflow-y: auto;
-    }
-
-    .is-desktop .nav-panel {
-      left: 50px;
-      right: 50px;
-      grid-template-columns: repeat(10, 1fr);
-    }
-
-    .nav-panel.collapsed {
-      display: none;
-    }
-
-    .toggle-nav-btn {
-      background: #334155;
-      color: #cbd5e1;
-      padding: 10px 16px;
-      border-radius: 10px;
-      cursor: pointer;
-      margin-bottom: 15px;
-      display: inline-block;
-      font-weight: bold;
-      border: 1px solid #475569;
-      transition: 0.2s;
-    }
-
-    .toggle-nav-btn:hover {
-      background: #475569;
-      color: white;
-    }
-
-    .nav-item {
-      aspect-ratio: 1/1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #334155;
-      color: #94a3b8;
-      border: 1px solid #475569;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
-      transition: 0.2s;
-    }
-
-    .nav-item:hover {
-      border-color: #94a3b8;
-      color: white;
-    }
-
-    .nav-item.active {
-      outline: 2px solid #fbbf24;
-      color: white;
-    }
-
-    .nav-item.done {
-      background: #2563eb !important;
-      color: #ffffff !important;
-      border-color: #60a5fa !important;
-    }
-
-    .nav-item.correct {
-      background: #064e3b !important;
-      color: #a7f3d0 !important;
-      border-color: #10b981 !important;
-    }
-
-    .nav-item.wrong {
-      background: #7f1d1d !important;
-      color: #fecaca !important;
-      border-color: #ef4444 !important;
-    }
-
-    /* EXIT BUTTON */
     .exit-btn {
       position: absolute;
       top: 24px;
@@ -414,23 +292,6 @@
       stroke-linejoin: round;
     }
 
-    /* FIXED BOTTOM NAV */
-    .nav-btns-fixed {
-      display: flex;
-      gap: 12px;
-      margin-top: auto;
-      padding-top: 20px;
-    }
-
-    .nav-btns-fixed button {
-      margin-top: 0;
-      background: #475569;
-    }
-
-    .nav-btns-fixed button:hover {
-      background: #64748b;
-    }
-
     .quiz-main-content {
       display: flex;
       flex-direction: column;
@@ -444,7 +305,7 @@
   <div class="card" id="app"></div>
 
   <script>
-    // ===== DATA NGÂN HÀNG CÂU HỎI =====
+    // ===== DATA NGÂN HÀNG CÂU HỎI (Đã xóa câu 743) =====
     const qBank = {
       "c1": [
         ["Trong ERM, thành phần \"Thông tin và giao tiếp\" có tác dụng gì đối với việc quản trị rủi ro hệ thống?", ["Đảm bảo thông tin về rủi ro được xác định và truyền đạt.", "Phát triển phần mềm độc quyền để ngăn ransomware.", "Loại bỏ nhu cầu đào tạo nhân viên về an toàn thông tin.", "Tự động hóa thu thập thông tin tình báo đối thủ cạnh tranh."], 1],
@@ -500,27 +361,26 @@
       ]
     };
 
-    // ===== STATE (TRẠNG THÁI ỨNG DỤNG) =====
-    let isFinished = false;
-    let isExam = true;
-    let timerInterval = null;
-    let timeLeft = 1800; // 30 phút
-    let userAnswers = [];
+    // ===== STATE QUẢN LÝ VÒNG LẶP (LOOP MODE) =====
+    let currentRound = 1;       // Vòng làm hiện tại
+    let roundStats = [];        // Lưu % điểm của từng vòng (dùng tính trung bình sau)
+    let roundQuestions = [];    // Danh sách câu hỏi của vòng hiện tại
+    let nextRoundWrong = [];    // Danh sách câu sai sẽ chuyển sang vòng sau
+    let cur = 0;                // Chỉ số câu hỏi hiện tại trong vòng
+    let roundCorrectCount = 0;  // Số câu trả lời đúng trong vòng hiện tại
     let selectedChaps = ["c1"];
-    let qs = [], cur = 0, correct = 0, total = 0, wrong = [], review = false;
-    let isNavOpen = false;
+    let totalInitialQuestions = 0;
 
     const app = document.getElementById("app");
 
-    // ===== UTIL =====
     function shuffle(a) {
       return [...a].sort(() => Math.random() - 0.5);
     }
 
-    // ===== UI: MÀN HÌNH BẮT ĐẦU =====
+    // ===== GIAO DIỆN BẮT ĐẦU =====
     function startUI() {
       app.innerHTML = `
-        <h2>Lựa Chọn Chương Ôn Tập</h2>
+        <h2>Lựa Chọn Chương Ôn Tập (Chế độ Lặp)</h2>
         <div class="chaps">
           <div class="chap active" id="c1" onclick="toggleChap('c1', this)">Chương 1 (${qBank.c1.length} câu)</div>
         </div> 
@@ -528,7 +388,7 @@
           <div id="val">10</div>
           <input type="range" id="slider" min="1" max="${qBank.c1.length}" value="10">
         </div> 
-        <button onclick="startExamMode()">Bắt đầu làm bài</button>
+        <button onclick="initQuizLoop()">Bắt đầu làm bài</button>
       `;
       updateSlider();
     }
@@ -554,14 +414,10 @@
       if (!slider) return;
 
       let totalQ = 0;
-      selectedChaps.forEach(c => {
-        if (qBank[c]) totalQ += qBank[c].length;
-      });
+      selectedChaps.forEach(c => { if (qBank[c]) totalQ += qBank[c].length; });
 
-      let minQ = Math.min(1, totalQ);
-      slider.min = minQ;
+      slider.min = 1;
       slider.max = totalQ || 1;
-
       if (Number(slider.value) > totalQ) slider.value = totalQ;
 
       moveSliderThumb();
@@ -571,50 +427,44 @@
         const percent = (slider.value - slider.min) / (slider.max - slider.min || 1);
         val.innerText = slider.value;
         const w = slider.offsetWidth;
-        const thumb = 24;
-        const x = percent * (w - thumb) + thumb / 2;
+        const x = percent * (w - 24) + 12;
         val.style.left = x + "px";
         slider.style.background = `linear-gradient(to right, #3b82f6 ${percent * 100}%, #334155 ${percent * 100}%)`;
       }
     }
 
-    // ===== KHỞI TẠO BÀI THI =====
-    function startExamMode() {
+    // ===== KHỞI TẠO BÀI THI LẶP =====
+    function initQuizLoop() {
       if (selectedChaps.length === 0) {
-        alert("Phải chọn ít nhất 1 chương");
+        alert("Phải chọn ít nhất 1 chương!");
         return;
       }
       const num = +document.getElementById("slider").value;
       let pool = [];
       selectedChaps.forEach(c => { if (qBank[c]) pool = pool.concat(qBank[c]); });
 
-      qs = shuffle(pool).slice(0, num);
+      // Khởi tạo vòng 1
+      roundQuestions = shuffle(pool).slice(0, num);
+      totalInitialQuestions = roundQuestions.length;
+      currentRound = 1;
+      roundStats = [];
+      nextRoundWrong = [];
       cur = 0;
-      correct = 0;
-      wrong = [];
-      review = false;
-      isFinished = false;
-      isExam = true;
-      userAnswers = new Array(qs.length).fill(null);
-      total = qs.length;
-      timeLeft = 1800;
+      roundCorrectCount = 0;
 
-      startTimer();
       showQ();
     }
 
-    // ===== HIỂN THỊ CÂU HỎI =====
+    // ===== HIỂN THỊ CÂU HỎI (KHÓA NHẢY TỰ DO) =====
     function showQ() {
-      if (cur >= qs.length) {
-        finishExam();
+      // Nếu đã hết câu hỏi trong vòng này -> Xử lý chuyển vòng
+      if (cur >= roundQuestions.length) {
+        finishRound();
         return;
       }
 
-      const [q, opts, ansRaw] = qs[cur];
-      const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-      const secs = (timeLeft % 60).toString().padStart(2, '0');
-      
-      const progressPercent = ((cur + 1) / qs.length) * 100;
+      const [q, opts, ansRaw] = roundQuestions[cur];
+      const progressPercent = ((cur + 1) / roundQuestions.length) * 100;
 
       app.innerHTML = `
         <button class="exit-btn" onclick="exitQuiz()" title="Thoát">
@@ -625,38 +475,20 @@
           </svg>
         </button>
 
-        <div id="timer">${isFinished ? `Kết quả: ${correct} / ${qs.length}` : `${mins}:${secs}`}</div>
-        
-        <div class="toggle-nav-btn" onclick="toggleNav()">
-          ${isNavOpen ? '✕ Đóng danh sách câu hỏi (Q)' : '☰ Danh sách câu hỏi (Q)'}
-        </div>
+        <div class="round-indicator">🔄 VÒNG LẶP THỨ: ${currentRound}</div>
 
         <div class="progress-container">
           <div class="progress-bar" style="width: ${progressPercent}%"></div>
         </div>
-        <div class="progress-text">Câu ${cur + 1} / ${qs.length}</div>
-
-        <div class="nav-panel ${isNavOpen ? '' : 'collapsed'}">
-          <div style="grid-column: 1 / -1; text-align: center; margin-bottom: 5px; font-size: 13px; color: #60a5fa; font-weight: bold;">
-            BẢNG CÂU HỎI
-          </div>
-          ${renderNavItems()}
-        </div>
+        <div class="progress-text">Câu ${cur + 1} / ${roundQuestions.length} (Vòng này)</div>
 
         <div class="quiz-main-content">
           <div class="q">${q}</div>
           <div id="ans"></div>
-          
-          <div class="nav-btns-fixed">
-            <button onclick="prevQ()" ${cur === 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>Lùi (W)</button>
-            ${!isFinished && cur === qs.length - 1
-              ? `<button onclick="finishExam()" style="background:#10b981">Nộp bài</button>`
-              : `<button onclick="nextQ()" ${cur === qs.length - 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>Tiến (E)</button>`}
-          </div>
         </div>
       `;
 
-      // Render Options
+      // Render các đáp án và cài đặt ép buộc chuyển câu ngay khi chọn
       const box = document.getElementById("ans");
       const letters = ["A", "B", "C", "D"];
       const keyCodes = ["1", "2", "3", "4"];
@@ -665,119 +497,137 @@
         const d = document.createElement("div");
         d.className = "option";
         d.setAttribute("data-key", `Phím ${keyCodes[i]}`);
-
-        if (isFinished) {
-          if (i + 1 === ansRaw) d.classList.add("correct");
-          if (userAnswers[cur] === i + 1 && i + 1 !== ansRaw) d.classList.add("wrong");
-        } else if (userAnswers[cur] === i + 1) {
-          d.classList.add("selected");
-        }
-
         d.innerText = `${letters[i]}. ${t}`;
+
         d.onclick = () => {
-          if (isFinished) return;
-          userAnswers[cur] = i + 1;
-          showQ();
+          // Khóa không cho click tiếp khi đã chọn
+          document.querySelectorAll(".option").forEach(el => el.style.pointerEvents = "none");
+
+          const selectedOption = i + 1;
+          if (selectedOption === ansRaw) {
+            d.classList.add("correct");
+            roundCorrectCount++;
+          } else {
+            d.classList.add("wrong");
+            // Hiển thị luôn đáp án đúng để người dùng biết
+            box.children[ansRaw - 1].classList.add("correct");
+            // Đưa câu sai vào danh sách lặp cho vòng sau
+            nextRoundWrong.push(roundQuestions[cur]);
+          }
+
+          // Buộc chuyển sang câu tiếp theo sau 800ms
+          setTimeout(() => {
+            cur++;
+            showQ();
+          }, 800);
         };
+
         box.appendChild(d);
       });
     }
 
-    function renderNavItems() {
-      return qs.map((q, i) => {
-        let statusClass = "";
-        if (isFinished) {
-          statusClass = (userAnswers[i] === q[2]) ? 'correct' : 'wrong';
-        } else if (userAnswers[i] !== null) {
-          statusClass = 'done';
-        }
-        return `<div class="nav-item ${statusClass} ${cur === i ? 'active' : ''}" onclick="jumpToQ(${i})">${i + 1}</div>`;
-      }).join('');
-    }
+    // ===== KẾT THÚC MỘT VÒNG LẶP =====
+    function finishRound() {
+      // Tính % đúng của vòng này
+      const roundScorePercent = Math.round((roundCorrectCount / roundQuestions.length) * 100);
+      roundStats.push(roundScorePercent);
 
-    function jumpToQ(index) {
-      cur = index;
-      isNavOpen = false;
-      showQ();
-    }
-
-    function toggleNav() {
-      isNavOpen = !isNavOpen;
-      showQ();
-    }
-
-    function nextQ() { if (cur < qs.length - 1) { cur++; showQ(); } }
-    function prevQ() { if (cur > 0) { cur--; showQ(); } }
-
-    function startTimer() {
-      if (timerInterval) clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        const timerEl = document.getElementById("timer");
-        if (timerEl && !isFinished) {
-          const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-          const secs = (timeLeft % 60).toString().padStart(2, '0');
-          timerEl.innerText = `${mins}:${secs}`;
-        }
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          alert("Hết giờ làm bài!");
-          finishExam();
-        }
-      }, 1000);
-    }
-
-    function finishExam() {
-      if (!isFinished && userAnswers.includes(null)) {
-        if (!confirm("Bạn còn câu chưa trả lời. Bạn có chắc chắn muốn nộp bài?")) return;
-      } else if (!isFinished) {
-        if (!confirm("Xác nhận nộp bài?")) return;
+      // Kiểm tra xem còn câu sai nào không để tiếp tục vòng sau
+      if (nextRoundWrong.length > 0) {
+        let wrongCount = nextRoundWrong.length;
+        
+        // Thông báo chuyển sang vòng tiếp theo với các câu sai
+        app.innerHTML = `
+          <div style="text-align: center; padding: 20px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
+            <div style="font-size: 50px; margin-bottom: 10px;">🔁</div>
+            <h2 style="color: #f59e0b; font-size: 24px; font-weight: 700;">Hoàn thành Vòng ${currentRound}!</h2>
+            <p style="font-size: 17px; color: #94a3b8; margin: 15px 0; line-height: 1.5;">
+              Bạn còn lại <strong style="color: #ef4444; font-size: 20px;">${wrongCount}</strong> câu trả lời sai.<br>
+              Hệ thống sẽ đưa các câu này vào <strong>Vòng ${currentRound + 1}</strong> để lặp lại cho đến khi đúng hoàn toàn!
+            </p>
+            <button onclick="startNextRound()" style="margin-top: 20px;">Tiếp tục Vòng ${currentRound + 1}</button>
+          </div>
+        `;
+      } else {
+        // Hết câu sai -> Hoàn thành toàn bộ quy trình lặp, hiển thị điểm đánh giá cuối cùng
+        showFinalResult();
       }
+    }
 
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
-      isFinished = true;
-      isNavOpen = false;
-
-      correct = 0;
-      qs.forEach((q, i) => { if (userAnswers[i] === q[2]) correct++; });
+    function startNextRound() {
+      currentRound++;
+      roundQuestions = [...nextRoundWrong]; // Đưa các câu sai thành bộ câu hỏi vòng mới
+      nextRoundWrong = [];                 // Reset danh sách câu sai tạm thời
       cur = 0;
+      roundCorrectCount = 0;
       showQ();
+    }
+
+    // ===== ĐÁNH GIÁ CUỐI CÙNG (Dựa trên % trung bình các vòng, không tính vòng cuối) =====
+    function showFinalResult() {
+      let scoreToEvaluate = [...roundStats];
+      let evaluatedRoundsCount = scoreToEvaluate.length;
+
+      let averageScore = 0;
+      if (evaluatedRoundsCount > 1) {
+        // Loại bỏ vòng cuối cùng (vòng hoàn hảo 100% sạch câu sai)
+        scoreToEvaluate.pop();
+        let sum = scoreToEvaluate.reduce((a, b) => a + b, 0);
+        averageScore = Math.round(sum / scoreToEvaluate.length);
+      } else {
+        // Nếu ngay vòng 1 đã đúng hết không cần lặp thêm vòng nào
+        averageScore = scoreToEvaluate[0];
+      }
+
+      let evaluationText = "";
+      if (averageScore >= 90) evaluationText = "Xuất sắc! Nắm vững kiến thức cực kỳ tốt.";
+      else if (averageScore >= 75) evaluationText = "Khá tốt! Kiến thức ổn định.";
+      else if (averageScore >= 50) evaluationText = "Trung bình. Cần ôn tập và chú ý thêm các câu hỏi sai.";
+      else evaluationText = "Cần cố gắng nhiều hơn trong việc ghi nhớ hệ thống câu hỏi.";
+
+      let roundsDetailHTML = roundStats.map((sc, idx) => `
+        <div style="display: flex; justify-content: space-between; padding: 6px 12px; background: rgba(255,255,255,0.03); margin-bottom: 6px; border-radius: 6px; font-size: 15px;">
+          <span>Vòng ${idx + 1} ${idx === roundStats.length - 1 && roundStats.length > 1 ? '(Vòng tổng kết)' : ''}:</span>
+          <strong style="color: #60a5fa;">${sc}%</strong>
+        </div>
+      `).join('');
+
+      app.innerHTML = `
+        <div style="text-align: center; padding: 10px;">
+          <h2 style="font-size: 28px; margin-bottom: 15px;">🎉 Hoàn thành xuất sắc!</h2>
+          <div style="background: #334155; padding: 20px; border-radius: 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.3)">
+            <p style="font-size: 16px; margin: 0; color: #94a3b8;">Đánh giá trung bình các vòng thực tế:</p>
+            <p style="font-size: 48px; font-weight: 800; margin: 10px 0; color: #fbbf24;">${averageScore}%</p>
+            <p style="font-size: 14px; color: #38bdf8; margin-bottom: 15px;">${evaluationText}</p>
+            
+            <div style="border-top: 1px solid #475569; padding-top: 12px; text-align: left;">
+              <p style="font-size: 14px; color: #94a3b8; margin-bottom: 8px; font-weight: bold; text-align: center;">Chi tiết các vòng làm bài:</p>
+              ${roundsDetailHTML}
+            </div>
+          </div>
+          <button onclick="resetApp()" style="margin-top: 20px;">Làm bài mới</button>
+        </div>
+      `;
     }
 
     function exitQuiz() {
       if (confirm("Tiến trình sẽ bị hủy. Bạn có muốn thoát?")) {
-        if (timerInterval) clearInterval(timerInterval);
-        isFinished = false;
-        isExam = false;
-        isNavOpen = false;
-        cur = 0;
-        correct = 0;
-        userAnswers = [];
         startUI();
       }
     }
 
-    // ===== PHÍM TẮT ĐIỀU HƯỚNG =====
-    document.addEventListener('keydown', function (event) {
-      const key = event.key.toLowerCase();
-      if (key === 'q') {
-        toggleNav();
-      }
-      if (key === 'w') {
-        prevQ();
-      }
-      if (key === 'e') {
-        nextQ();
-      }
+    function resetApp() {
+      selectedChaps = ["c1"];
+      startUI();
+    }
 
-      // Chọn đáp án bằng phím số 1, 2, 3, 4
-      if (!isFinished && ["1", "2", "3", "4"].includes(event.key)) {
+    // ===== XỬ LÝ PHÍM TẮT ĐÁP ÁN (1, 2, 3, 4) =====
+    document.addEventListener('keydown', function (event) {
+      if (["1", "2", "3", "4"].includes(event.key)) {
         const optionIdx = parseInt(event.key) - 1;
         const options = document.querySelectorAll('.option');
-        if (options[optionIdx]) {
+        // Chỉ bấm được khi các lựa chọn chưa bị khóa (chưa chọn)
+        if (options[optionIdx] && options[0].style.pointerEvents !== "none") {
           options[optionIdx].click();
         }
       }
@@ -796,7 +646,7 @@
     window.addEventListener('resize', detectDesktop);
     detectDesktop();
 
-    // Khởi chạy ứng dụng
+    // Khởi chạy ứng dụng ban đầu
     startUI();
   </script>
 </body>
