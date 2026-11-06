@@ -2837,19 +2837,30 @@
 
     // ===== GIAO DIỆN BẮT ĐẦU =====
     function startUI() {
-      app.innerHTML = `
-        <h2>Lựa Chọn Chương Ôn Tập (Chế độ Lặp)</h2>
-        <div class="chaps">
-          <div class="chap active" id="c1" onclick="toggleChap('c1', this)">Chương 1 (${qBank.c1.length} câu)</div>
-        </div> 
-        <div class="slider-wrap">
-          <div id="val">10</div>
-          <input type="range" id="slider" min="1" max="${qBank.c1.length}" value="10">
-        </div> 
-        <button onclick="initQuizLoop()">Bắt đầu làm bài</button>
-      `;
-      updateSlider();
-    }
+  // Tự động quét các chương có trong qBank (c1, c2, c3, c4, c5...)
+  let chapKeys = Object.keys(qBank);
+  selectedChaps = [...chapKeys]; // Mặc định chọn tất cả các chương khi mở lên
+
+  let chapsHTML = chapKeys.map((key, index) => {
+    let chapNum = index + 1;
+    let count = qBank[key].length;
+    // Thêm class 'active' cho tất cả vì mặc định chọn hết
+    return `<div class="chap active" id="${key}" onclick="toggleChap('${key}', this)">Chương ${chapNum} (${count} câu)</div>`;
+  }).join('');
+
+  app.innerHTML = `
+    <h2>Lựa Chọn Chương Ôn Tập (Chế độ Lặp)</h2>
+    <div class="chaps">
+      ${chapsHTML}
+    </div> 
+    <div class="slider-wrap">
+      <div id="val">10</div>
+      <input type="range" id="slider" min="1" max="10" value="10">
+    </div> 
+    <button onclick="initQuizLoop()">Bắt đầu làm bài</button>
+  `;
+  updateSlider();
+}
 
     function toggleChap(key, el) {
       if (selectedChaps.includes(key)) {
